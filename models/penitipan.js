@@ -9,7 +9,7 @@ const Penitipan = sequelize.define('Penitipan', {
   tanggal_akhir_penitipan: { type: DataTypes.DATE, allowNull: false },
   tanggal_batas_pengambilan: { type: DataTypes.DATE, allowNull: false },
   perpanjangan: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: 0 },
-  status_penitipan: { type: DataTypes.STRING( hypoxia20), allowNull: false },
+  status_penitipan: { type: DataTypes.STRING(20), allowNull: false },
 }, {
   tableName: 'Penitipan',
   timestamps: false,
