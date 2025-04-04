@@ -21,7 +21,7 @@ const Barang = sequelize.define('Barang', {
     allowNull: false,
   },
   nama: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
   deskripsi: {
@@ -50,11 +50,11 @@ const Barang = sequelize.define('Barang', {
     allowNull: false,
   },
   status_qc: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING(50),
     allowNull: false,
   },
   kategori_barang: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
 }, {

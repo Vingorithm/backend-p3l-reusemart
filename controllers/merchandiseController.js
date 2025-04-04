@@ -8,6 +8,8 @@ exports.createMerchandise = async (req, res) => {
       id_merchandise: uuidv4(),
       id_admin,
       nama_merchandise,
+      deskripsi,
+      gambar,
       harga_poin,
       stok_merchandise,
     });
@@ -41,7 +43,7 @@ exports.updateMerchandise = async (req, res) => {
     const { id_admin, nama_merchandise, harga_poin, stok_merchandise } = req.body;
     const merchandise = await Merchandise.findByPk(req.params.id);
     if (!merchandise) return res.status(404).json({ message: 'Merchandise tidak ditemukan' });
-    await merchandise.update({ id_admin, nama_merchandise, harga_poin, stok_merchandise });
+    await merchandise.update({ id_admin, nama_merchandise, deskripsi, gambar, harga_poin, stok_merchandise });
     res.status(200).json(merchandise);
   } catch (error) {
     res.status(500).json({ error: error.message });

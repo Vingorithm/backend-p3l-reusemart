@@ -8,6 +8,7 @@ exports.createAkun = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const akun = await Akun.create({
       id_akun: uuidv4(),
+      profile_picture,
       email,
       password: hashedPassword,
       role,
@@ -44,7 +45,7 @@ exports.updateAkun = async (req, res) => {
     if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : akun.password;
-    await akun.update({ email, password: hashedPassword, role });
+    await akun.update({ profile_picture, email, password: hashedPassword, role });
     res.status(200).json(akun);
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -6,6 +6,7 @@ exports.createAlamatPembeli = async (req, res) => {
     const { nama_alamat, alamat_lengkap, is_main_address } = req.body;
     const alamat = await AlamatPembeli.create({
       id_alamat: uuidv4(),
+      id_pembeli,
       nama_alamat,
       alamat_lengkap,
       is_main_address,
@@ -40,7 +41,7 @@ exports.updateAlamatPembeli = async (req, res) => {
     const { nama_alamat, alamat_lengkap, is_main_address } = req.body;
     const alamat = await AlamatPembeli.findByPk(req.params.id);
     if (!alamat) return res.status(404).json({ message: 'Alamat tidak ditemukan' });
-    await alamat.update({ nama_alamat, alamat_lengkap, is_main_address });
+    await alamat.update({ id_pembeli, nama_alamat, alamat_lengkap, is_main_address });
     res.status(200).json(alamat);
   } catch (error) {
     res.status(500).json({ error: error.message });

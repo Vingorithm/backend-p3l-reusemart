@@ -3,20 +3,24 @@ const sequelize = require('../config/database');
 
 const Akun = sequelize.define('Akun', {
   id_akun: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.STRING(255),
     primaryKey: true,
   },
+  profile_picture: {
+    type: DataTypes.STRING(255),
+    allowNull: false,
+  },
   email: {
-    type: DataTypes.STRING(100),
+    type: DataTypes.STRING(255),
     allowNull: false,
     unique: true,
   },
   password: {
-    type: DataTypes.STRING(60),
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
   role: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING(255),
     allowNull: false,
   },
 }, {
