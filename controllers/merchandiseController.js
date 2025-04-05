@@ -3,7 +3,7 @@ const Merchandise = require('../models/merchandise');
 
 exports.createMerchandise = async (req, res) => {
   try {
-    const { id_admin, nama_merchandise, harga_poin, stok_merchandise } = req.body;
+    const { id_admin, nama_merchandise, harga_poin, deskripsi, gambar, stok_merchandise } = req.body;
     const merchandise = await Merchandise.create({
       id_merchandise: uuidv4(),
       id_admin,
@@ -40,7 +40,7 @@ exports.getMerchandiseById = async (req, res) => {
 
 exports.updateMerchandise = async (req, res) => {
   try {
-    const { id_admin, nama_merchandise, harga_poin, stok_merchandise } = req.body;
+    const { id_admin, nama_merchandise, harga_poin, deskripsi, gambar, stok_merchandise } = req.body;
     const merchandise = await Merchandise.findByPk(req.params.id);
     if (!merchandise) return res.status(404).json({ message: 'Merchandise tidak ditemukan' });
     await merchandise.update({ id_admin, nama_merchandise, deskripsi, gambar, harga_poin, stok_merchandise });
