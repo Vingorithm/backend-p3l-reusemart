@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const Akun = require('../models/akun');
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = 'your_secret_key';
+const fs = require('fs');
+const path = require('path');
 
 const generateNewId = async () => {
   const lastAkun = await Akun.findOne({
@@ -41,7 +43,6 @@ exports.createAkun = async (req, res) => {
 exports.register = async (req, res) => {
   try {
     const { email, password, role } = req.body;
-    const profile_picture = req.file ? req.file.filename : null;
 
     if (!email || !password || !role) {
       return res.status(400).json({ message: 'email, password, dan role wajib diisi' });
@@ -52,6 +53,18 @@ exports.register = async (req, res) => {
 
     const newId = await generateNewId();
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    let profile_picture = null;
+
+    if (req.file) {
+      const fileExtension = path.extname(req.file.originalname);
+      const newFilename = `${newId}${fileExtension}`;
+      const oldPath = path.join(req.file.destination, req.file.filename);
+      const newPath = path.join(req.file.destination, newFilename);
+
+      fs.renameSync(oldPath, newPath);
+      profile_picture = newFilename;
+    }
 
     const akun = await Akun.create({
       id_akun: newId,

@@ -1,5 +1,6 @@
-const { v4: uuidv4 } = require('uuid');
 const Barang = require('../models/barang');
+const fs = require('fs');
+const path = require('path');
 
 const generateNewId = async () => {
   const last = await Barang.findOne({
@@ -19,8 +20,34 @@ const generateNewId = async () => {
 
 exports.createBarang = async (req, res) => {
   try {
-    const { id_penitip, id_hunter, id_pegawai_gudang, nama, deskripsi, gambar, harga, garansi_berlaku, tanggal_garansi, berat, status_qc, kategori_barang } = req.body;
+    const {
+      id_penitip,
+      id_hunter,
+      id_pegawai_gudang,
+      nama,
+      deskripsi,
+      harga,
+      garansi_berlaku,
+      tanggal_garansi,
+      berat,
+      status_qc,
+      kategori_barang
+    } = req.body;
+
     const newId = await generateNewId();
+
+    let gambar = null;
+
+    if (req.file) {
+      const fileExtension = path.extname(req.file.originalname);
+      const newFilename = `${newId}${fileExtension}`;
+      const oldPath = path.join(req.file.destination, req.file.filename);
+      const newPath = path.join(req.file.destination, newFilename);
+
+      fs.renameSync(oldPath, newPath);
+      gambar = newFilename;
+    }
+
     const barang = await Barang.create({
       id_barang: newId,
       id_penitip,
@@ -36,6 +63,7 @@ exports.createBarang = async (req, res) => {
       status_qc,
       kategori_barang,
     });
+
     res.status(201).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });

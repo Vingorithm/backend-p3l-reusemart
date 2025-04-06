@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const barangController = require('../controllers/barangController');
 const multer = require('multer');
-const upload = multer();
+const upload = require('../middleware/upload');
 
 router.post('/',upload.single('gambar'), barangController.createBarang);
 router.get('/', barangController.getAllBarang);
