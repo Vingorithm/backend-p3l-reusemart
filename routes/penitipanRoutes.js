@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const penitipanController = require('../controllers/penitipanController');
+const multer = require('multer');
+const upload = multer();
 
-router.post('/', penitipanController.createPenitipan);
+router.post('/', upload.none(), penitipanController.createPenitipan);
 router.get('/', penitipanController.getAllPenitipan);
 router.get('/:id', penitipanController.getPenitipanById);
 router.put('/:id', penitipanController.updatePenitipan);

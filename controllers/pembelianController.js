@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const Pembelian = require('../models/pembelian');
 
+const generateNewId = async () => {
+  const last = await Pembelian.findOne({
+    order: [['id_pembelian', 'DESC']]
+  });
+
+  if (!last || !/^PBLN\d+$/.test(last.id_pembelian)) return 'PBLN001';
+
+  const lastId = last.id_pembelian;
+  const numericPart = parseInt(lastId.slice(4));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `PBLN${formatted}`;
+};
+
 exports.createPembelian = async (req, res) => {
   try {
     const { id_barang, id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
+    const newId = await generateNewId();
     const pembelian = await Pembelian.create({
-      id_pembelian: uuidv4(),
+      id_pembelian: newId,
       id_barang,
       id_customer_service,
       id_pembeli,

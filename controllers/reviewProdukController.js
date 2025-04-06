@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const ReviewProduk = require('../models/reviewProduk');
 
+const generateNewId = async () => {
+  const last = await ReviewProduk.findOne({
+    order: [['id_review_produk', 'DESC']]
+  });
+
+  if (!last || !/^REV\d+$/.test(last.id_review_produk)) return 'REV001';
+
+  const lastId = last.id_review_produk;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `REV${formatted}`;
+};
+
 exports.createReviewProduk = async (req, res) => {
   try {
     const { id_transaksi, rating, tanggal_review } = req.body;
+    const newId = await generateNewId();
     const review = await ReviewProduk.create({
-      id_review: uuidv4(),
+      id_review: newId,
       id_transaksi,
       rating,
       tanggal_review,

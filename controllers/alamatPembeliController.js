@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const AlamatPembeli = require('../models/alamatPembeli');
 
+const generateNewId = async () => {
+  const last = await AlamatPembeli.findOne({
+    order: [['id_alamat', 'DESC']]
+  });
+
+  if (!last) return 'ALMT001';
+
+  const lastId = last.id_alamat;
+  const numericPart = parseInt(lastId.slice(4));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `ALMT${formatted}`;
+};
+
 exports.createAlamatPembeli = async (req, res) => {
   try {
-    const { nama_alamat, alamat_lengkap, is_main_address } = req.body;
+    const { id_pembeli, nama_alamat, alamat_lengkap, is_main_address } = req.body;
+    const newId = await generateNewId();
     const alamat = await AlamatPembeli.create({
-      id_alamat: uuidv4(),
+      id_alamat: newId,
       id_pembeli,
       nama_alamat,
       alamat_lengkap,

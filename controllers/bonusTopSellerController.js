@@ -1,11 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const BonusTopSeller = require('../models/bonusTopSeller');
 
+const generateNewId = async () => {
+  const last = await BonusTopSeller.findOne({
+    order: [['id_bonus_top_seller', 'DESC']]
+  });
+
+  if (!last || !last.id_bonus_top_seller || !/^BTS\d{3}$/.test(last.id_bonus_top_seller)) {
+    return 'BTS001';
+  }
+
+  const lastId = last.id_bonus_top_seller;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `BTS${formatted}`;
+};
+
 exports.createBonusTopSeller = async (req, res) => {
   try {
     const { id_penitip, nominal, tanggal_pembayaran } = req.body;
+    const newId = await generateNewId();
     const bonus = await BonusTopSeller.create({
-      id_bonus_top_seller: uuidv4(),
+      id_bonus_top_seller: newId,
       id_penitip,
       nominal,
       tanggal_pembayaran,

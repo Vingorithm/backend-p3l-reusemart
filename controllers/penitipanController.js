@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const Penitipan = require('../models/penitipan');
 
+const generateNewId = async () => {
+  const last = await Penitipan.findOne({
+    order: [['id_penitipan', 'DESC']]
+  });
+
+  if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP001';
+
+  const lastId = last.id_penitipan;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `PTP${formatted}`;
+};
+
 exports.createPenitipan = async (req, res) => {
   try {
     const { id_barang, tanggal_awal_penitipan, tanggal_akhir_penitipan, tanggal_batas_pengambilan, perpanjangan, status_penitipan } = req.body;
+    const newId = await generateNewId();
     const penitipan = await Penitipan.create({
-      id_penitipan: uuidv4(),
+      id_penitipan: newId,
       id_barang,
       tanggal_awal_penitipan,
       tanggal_akhir_penitipan,

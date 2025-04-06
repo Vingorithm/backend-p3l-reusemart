@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const Pembeli = require('../models/pembeli');
 
+const generateNewId = async () => {
+  const last = await Pembeli.findOne({
+    order: [['id_pembeli', 'DESC']]
+  });
+
+  if (!last || !/^PBL\d+$/.test(last.id_pembeli)) return 'PBL001';
+
+  const lastId = last.id_pembeli;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `PBL${formatted}`;
+};
+
 exports.createPembeli = async (req, res) => {
   try {
     const { id_akun, nama, total_poin, tanggal_registrasi } = req.body;
+    const newId = await generateNewId();
     const pembeli = await Pembeli.create({
-      id_pembeli: uuidv4(),
+      id_pembeli: newId,
       id_akun,
       nama,
       total_poin,

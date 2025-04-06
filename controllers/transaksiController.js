@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const Transaksi = require('../models/transaksi');
 
+const generateNewId = async () => {
+  const last = await Transaksi.findOne({
+    order: [['id_transaksi', 'DESC']]
+  });
+
+  if (!last || !/^TRX\d+$/.test(last.id_transaksi)) return 'TRX001';
+
+  const lastId = last.id_transaksi;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `TRX${formatted}`;
+};
+
 exports.createTransaksi = async (req, res) => {
   try {
     const { id_pengiriman, komisi_reusemart, komisi_hunter, pendapatan, bonus_cepat } = req.body;
+    const newId = await generateNewId();
     const transaksi = await Transaksi.create({
-      id_transaksi: uuidv4(),
+      id_transaksi: newId,
       id_pengiriman,
       komisi_reusemart,
       komisi_hunter,

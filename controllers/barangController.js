@@ -1,11 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Barang = require('../models/barang');
 
+const generateNewId = async () => {
+  const last = await Barang.findOne({
+    order: [['id_barang', 'DESC']]
+  });
+
+  if (!last || !last.id_barang || !/^BRG\d{3}$/.test(last.id_barang)) {
+    return 'BRG001';
+  }
+
+  const lastId = last.id_barang;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `BRG${formatted}`;
+};
+
 exports.createBarang = async (req, res) => {
   try {
     const { id_penitip, id_hunter, id_pegawai_gudang, nama, deskripsi, gambar, harga, garansi_berlaku, tanggal_garansi, berat, status_qc, kategori_barang } = req.body;
+    const newId = await generateNewId();
     const barang = await Barang.create({
-      id_barang: uuidv4(),
+      id_barang: newId,
       id_penitip,
       id_hunter,
       id_pegawai_gudang,

@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const RequestDonasi = require('../models/requestDonasi');
 
+const generateNewId = async () => {
+  const last = await RequestDonasi.findOne({
+    order: [['id_request_donasi', 'DESC']]
+  });
+
+  if (!last || !/^RDN\d+$/.test(last.id_request_donasi)) return 'RDN001';
+
+  const lastId = last.id_request_donasi;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `RDN${formatted}`;
+};
+
 exports.createRequestDonasi = async (req, res) => {
   try {
     const { id_organisasi, deskripsi_request, tanggal_request, status_request } = req.body;
+    const newId = await generateNewId();
     const request = await RequestDonasi.create({
-      id_request_donasi: uuidv4(),
+      id_request_donasi: newId,
       id_organisasi,
       deskripsi_request,
       tanggal_request,

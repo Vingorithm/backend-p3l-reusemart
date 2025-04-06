@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const Merchandise = require('../models/merchandise');
 
+const generateNewId = async () => {
+  const last = await Merchandise.findOne({
+    order: [['id_merchandise', 'DESC']]
+  });
+
+  if (!last) return 'MRC001';
+
+  const lastId = last.id_merchandise;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `MRC${formatted}`;
+};
+
 exports.createMerchandise = async (req, res) => {
   try {
     const { id_admin, nama_merchandise, harga_poin, deskripsi, gambar, stok_merchandise } = req.body;
+    const newId = await generateNewId();
     const merchandise = await Merchandise.create({
-      id_merchandise: uuidv4(),
+      id_merchandise: newId,
       id_admin,
       nama_merchandise,
       deskripsi,

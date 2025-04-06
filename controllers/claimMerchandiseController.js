@@ -1,11 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const ClaimMerchandise = require('../models/claimMerchandise');
 
+const generateNewId = async () => {
+  const last = await ClaimMerchandise.findOne({
+    order: [['id_claim_merchandise', 'DESC']]
+  });
+
+  if (!last || !last.id_claim_merchandise || !/^CLM\d{3}$/.test(last.id_claim_merchandise)) {
+    return 'CLM001';
+  }
+
+  const lastId = last.id_claim_merchandise;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `CLM${formatted}`;
+};
+
 exports.createClaimMerchandise = async (req, res) => {
   try {
     const { id_merchandise, id_pembeli, id_customer_service, tanggal_claim, tanggal_ambil, status_claim_merchandise } = req.body;
+    const newId = await generateNewId();
     const claim = await ClaimMerchandise.create({
-      id_claim_merchandise: uuidv4(),
+      id_claim_merchandise: newId,
       id_merchandise,
       id_pembeli,
       id_customer_service,

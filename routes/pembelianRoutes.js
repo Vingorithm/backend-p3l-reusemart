@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const pembelianController = require('../controllers/pembelianController');
+const multer = require('multer');
+const upload = multer();
 
-router.post('/', pembelianController.createPembelian);
+router.post('/', upload.none(), pembelianController.createPembelian);
 router.get('/', pembelianController.getAllPembelian);
 router.get('/:id', pembelianController.getPembelianById);
 router.put('/:id', pembelianController.updatePembelian);

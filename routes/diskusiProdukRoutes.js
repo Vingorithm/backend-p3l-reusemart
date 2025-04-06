@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const diskusiProdukController = require('../controllers/diskusiProdukController');
+const multer = require('multer');
+const upload = multer();
 
-router.post('/', diskusiProdukController.createDiskusiProduk);
+router.post('/', upload.none(), diskusiProdukController.createDiskusiProduk);
 router.get('/', diskusiProdukController.getAllDiskusiProduk);
 router.get('/:id', diskusiProdukController.getDiskusiProdukById);
 router.put('/:id', diskusiProdukController.updateDiskusiProduk);

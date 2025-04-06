@@ -1,11 +1,26 @@
 const { v4: uuidv4 } = require('uuid');
 const DonasiBarang = require('../models/donasiBarang');
 
+const generateNewId = async () => {
+  const last = await DonasiBarang.findOne({
+    order: [['id_donasi_barang', 'DESC']]
+  });
+
+  if (!last) return 'DNB001';
+
+  const lastId = last.id_donasi_barang;
+  const numericPart = parseInt(lastId.slice(3));
+  const newNumericPart = numericPart + 1;
+  const formatted = newNumericPart.toString().padStart(3, '0');
+  return `DNB${formatted}`;
+};
+
 exports.createDonasiBarang = async (req, res) => {
   try {
     const { id_request_donasi, id_owner, id_barang, tanggal_donasi } = req.body;
+    const newId = await generateNewId();
     const donasi = await DonasiBarang.create({
-      id_donasi_barang: uuidv4(),
+      id_donasi_barang: newId,
       id_request_donasi,
       id_owner,
       id_barang,

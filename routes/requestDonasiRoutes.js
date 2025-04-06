@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const requestDonasiController = require('../controllers/requestDonasiController');
+const multer = require('multer');
+const upload = multer();
 
-router.post('/', requestDonasiController.createRequestDonasi);
+router.post('/', upload.none(), requestDonasiController.createRequestDonasi);
 router.get('/', requestDonasiController.getAllRequestDonasi);
 router.get('/:id', requestDonasiController.getRequestDonasiById);
 router.put('/:id', requestDonasiController.updateRequestDonasi);
