@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_alamat', 'DESC']]
   });
 
-  if (!last) return 'ALMT001';
+  if (!last) return 'ALMT1';
 
   const lastId = last.id_alamat;
   const numericPart = parseInt(lastId.slice(4));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `ALMT${formatted}`;
+  return `ALMT${newNumericPart}`;
 };
 
 exports.createAlamatPembeli = async (req, res) => {

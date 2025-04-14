@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_penitip', 'DESC']]
   });
 
-  if (!last || !/^T\d+$/.test(last.id_penitip)) return 'T001';
+  if (!last || !/^T\d+$/.test(last.id_penitip)) return 'T1';
 
   const lastId = last.id_penitip;
   const numericPart = parseInt(lastId.slice(1));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `T${formatted}`;
+  return `T${newNumericPart}`;
 };
 
 exports.createPenitip = async (req, res) => {

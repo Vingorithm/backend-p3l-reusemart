@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_penitipan', 'DESC']]
   });
 
-  if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP001';
+  if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP1';
 
   const lastId = last.id_penitipan;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `PTP${formatted}`;
+  return `PTP${newNumericPart}`;
 };
 
 exports.createPenitipan = async (req, res) => {

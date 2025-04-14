@@ -2,21 +2,29 @@ const Barang = require('../models/barang');
 const fs = require('fs');
 const path = require('path');
 
-const generateNewId = async () => {
-  const last = await Barang.findOne({
-    order: [['id_barang', 'DESC']]
-  });
-
-  if (!last || !last.id_barang || !/^BRG\d{3}$/.test(last.id_barang)) {
-    return 'BRG001';
+const generateNewId = async (namaBarang) => {
+  if (!namaBarang || namaBarang.length === 0) {
+    throw new Error("Nama barang tidak boleh kosong untuk generate ID.");
   }
 
-  const lastId = last.id_barang;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `BRG${formatted}`;
+  const hurufDepan = namaBarang[0].toUpperCase();
+
+  const allBarang = await Barang.findAll({
+    attributes: ['id_barang']
+  });
+
+  const allNumericIds = allBarang
+    .map(b => {
+      const match = b.id_barang.match(/^[A-Z](\d+)$/);
+      return match ? parseInt(match[1]) : null;
+    })
+    .filter(id => id !== null);
+
+  const nextNumber = allNumericIds.length > 0 ? Math.max(...allNumericIds) + 1 : 1;
+
+  return `${hurufDepan}${nextNumber}`;
 };
+
 
 exports.createBarang = async (req, res) => {
   try {
@@ -34,7 +42,7 @@ exports.createBarang = async (req, res) => {
       kategori_barang
     } = req.body;
 
-    const newId = await generateNewId();
+    const newId = await generateNewId(nama);
 
     let gambar = null;
 

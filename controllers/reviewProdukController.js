@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_review_produk', 'DESC']]
   });
 
-  if (!last || !/^REV\d+$/.test(last.id_review_produk)) return 'REV001';
+  if (!last || !/^REV\d+$/.test(last.id_review_produk)) return 'REV1';
 
   const lastId = last.id_review_produk;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `REV${formatted}`;
+  return `REV${newNumericPart}`;
 };
 
 exports.createReviewProduk = async (req, res) => {

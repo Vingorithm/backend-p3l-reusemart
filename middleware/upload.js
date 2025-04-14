@@ -3,10 +3,9 @@ const path = require('path');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // pastikan folder ini ada
+    cb(null, 'uploads/');
   },
   filename: function (req, file, cb) {
-    // Gunakan nama temporer dulu, nanti diganti di controller
     cb(null, Date.now() + path.extname(file.originalname));
   }
 });

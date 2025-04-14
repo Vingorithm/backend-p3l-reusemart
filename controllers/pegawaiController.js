@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_pegawai', 'DESC']]
   });
 
-  if (!last || !/^P\d+$/.test(last.id_pegawai)) return 'P001';
+  if (!last || !/^P\d+$/.test(last.id_pegawai)) return 'P1';
 
   const lastId = last.id_pegawai;
   const numericPart = parseInt(lastId.slice(1));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `P${formatted}`;
+  return `P${newNumericPart}`;
 };
 
 exports.createPegawai = async (req, res) => {

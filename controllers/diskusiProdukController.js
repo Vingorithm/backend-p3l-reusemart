@@ -7,14 +7,13 @@ const generateNewId = async () => {
   });
 
   if (!last || !last.id_diskusi_produk || !/^DSK\d{3}$/.test(last.id_diskusi_produk)) {
-    return 'DSK001';
+    return 'DSK1';
   }
 
   const lastId = last.id_diskusi_produk;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `DSK${formatted}`;
+  return `DSK${newNumericPart}`;
 };
 
 exports.createDiskusiProduk = async (req, res) => {

@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_organisasi_amal', 'DESC']]
   });
 
-  if (!last) return 'ORG001';
+  if (!last) return 'ORG1';
 
   const lastId = last.id_organisasi_amal;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `ORG${formatted}`;
+  return `ORG${newNumericPart}`;
 };
 
 exports.createOrganisasiAmal = async (req, res) => {

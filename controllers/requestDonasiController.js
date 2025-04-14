@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_request_donasi', 'DESC']]
   });
 
-  if (!last || !/^RDN\d+$/.test(last.id_request_donasi)) return 'RDN001';
+  if (!last || !/^RDN\d+$/.test(last.id_request_donasi)) return 'RDN1';
 
   const lastId = last.id_request_donasi;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `RDN${formatted}`;
+  return `RDN${newNumericPart}`;
 };
 
 exports.createRequestDonasi = async (req, res) => {

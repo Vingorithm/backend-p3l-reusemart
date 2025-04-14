@@ -7,14 +7,13 @@ const generateNewId = async () => {
   });
 
   if (!last || !last.id_claim_merchandise || !/^CLM\d{3}$/.test(last.id_claim_merchandise)) {
-    return 'CLM001';
+    return 'CLM1';
   }
 
   const lastId = last.id_claim_merchandise;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `CLM${formatted}`;
+  return `CLM${newNumericPart}`;
 };
 
 exports.createClaimMerchandise = async (req, res) => {

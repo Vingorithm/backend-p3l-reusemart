@@ -7,14 +7,13 @@ const generateNewId = async () => {
   });
 
   if (!last || !last.id_bonus_top_seller || !/^BTS\d{3}$/.test(last.id_bonus_top_seller)) {
-    return 'BTS001';
+    return 'BTS1';
   }
 
   const lastId = last.id_bonus_top_seller;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `BTS${formatted}`;
+  return `BTS${newNumericPart}`;
 };
 
 exports.createBonusTopSeller = async (req, res) => {

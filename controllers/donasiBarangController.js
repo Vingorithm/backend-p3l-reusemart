@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_donasi_barang', 'DESC']]
   });
 
-  if (!last) return 'DNB001';
+  if (!last) return 'DNB1';
 
   const lastId = last.id_donasi_barang;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `DNB${formatted}`;
+  return `DNB${newNumericPart}`;
 };
 
 exports.createDonasiBarang = async (req, res) => {

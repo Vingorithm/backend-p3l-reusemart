@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_merchandise', 'DESC']]
   });
 
-  if (!last) return 'MRC001';
+  if (!last) return 'MRC1';
 
   const lastId = last.id_merchandise;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `MRC${formatted}`;
+  return `MRC${newNumericPart}`;
 };
 
 exports.createMerchandise = async (req, res) => {

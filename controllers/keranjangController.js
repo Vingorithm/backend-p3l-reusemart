@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_keranjang', 'DESC']]
   });
 
-  if (!last) return 'KRJ001';
+  if (!last) return 'KRJ1';
 
   const lastId = last.id_keranjang;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `KRJ${formatted}`;
+  return `KRJ${newNumericPart}`;
 };
 
 exports.createKeranjang = async (req, res) => {

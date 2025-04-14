@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_pembelian', 'DESC']]
   });
 
-  if (!last || !/^PBLN\d+$/.test(last.id_pembelian)) return 'PBLN001';
+  if (!last || !/^PBLN\d+$/.test(last.id_pembelian)) return 'PBLN1';
 
   const lastId = last.id_pembelian;
   const numericPart = parseInt(lastId.slice(4));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `PBLN${formatted}`;
+  return `PBLN${newNumericPart}`;
 };
 
 exports.createPembelian = async (req, res) => {

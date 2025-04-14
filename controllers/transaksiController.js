@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_transaksi', 'DESC']]
   });
 
-  if (!last || !/^TRX\d+$/.test(last.id_transaksi)) return 'TRX001';
+  if (!last || !/^TRX\d+$/.test(last.id_transaksi)) return 'TRX1';
 
   const lastId = last.id_transaksi;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `TRX${formatted}`;
+  return `TRX${newNumericPart}`;
 };
 
 exports.createTransaksi = async (req, res) => {

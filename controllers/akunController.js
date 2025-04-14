@@ -10,13 +10,12 @@ const generateNewId = async () => {
     order: [['id_akun', 'DESC']]
   });
 
-  if (!lastAkun) return 'A001';
+  if (!lastAkun) return 'A1';
 
   const lastId = lastAkun.id_akun;
   const numericPart = parseInt(lastId.slice(1));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `A${formatted}`;
+  return `A${newNumericPart}`;
 };
 
 exports.createAkun = async (req, res) => {

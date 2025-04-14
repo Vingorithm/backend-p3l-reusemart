@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_pembeli', 'DESC']]
   });
 
-  if (!last || !/^PBL\d+$/.test(last.id_pembeli)) return 'PBL001';
+  if (!last || !/^PBL\d+$/.test(last.id_pembeli)) return 'PBL1';
 
   const lastId = last.id_pembeli;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `PBL${formatted}`;
+  return `PBL${newNumericPart}`;
 };
 
 exports.createPembeli = async (req, res) => {

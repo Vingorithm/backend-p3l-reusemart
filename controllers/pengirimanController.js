@@ -6,13 +6,12 @@ const generateNewId = async () => {
     order: [['id_pengiriman', 'DESC']]
   });
 
-  if (!last || !/^PGR\d+$/.test(last.id_pengiriman)) return 'PGR001';
+  if (!last || !/^PGR\d+$/.test(last.id_pengiriman)) return 'PGR1';
 
   const lastId = last.id_pengiriman;
   const numericPart = parseInt(lastId.slice(3));
   const newNumericPart = numericPart + 1;
-  const formatted = newNumericPart.toString().padStart(3, '0');
-  return `PGR${formatted}`;
+  return `PGR${newNumericPart}`;
 };
 
 exports.createPengiriman = async (req, res) => {
