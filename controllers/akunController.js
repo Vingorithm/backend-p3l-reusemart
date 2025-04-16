@@ -98,9 +98,9 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: akun.id_akun, email: akun.email, role: akun.role },
       SECRET_KEY,
-      { expiresIn: '1d' }
+      { expiresIn: '1h' }
     );
-
+    
     res.status(200).json({ message: 'Login berhasil', token });
   } catch (error) {
     res.status(500).json({ error: error.message });
