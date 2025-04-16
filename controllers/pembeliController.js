@@ -1,23 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Pembeli = require('../models/pembeli');
+const generateId = require('../utils/generateId');
 
-const generateNewId = async () => {
-  const last = await Pembeli.findOne({
-    order: [['id_pembeli', 'DESC']]
-  });
+// const generateNewId = async () => {
+//   const last = await Pembeli.findOne({
+//     order: [['id_pembeli', 'DESC']]
+//   });
 
-  if (!last || !/^PBL\d+$/.test(last.id_pembeli)) return 'PBL1';
+//   if (!last || !/^PBL\d+$/.test(last.id_pembeli)) return 'PBL1';
 
-  const lastId = last.id_pembeli;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `PBL${newNumericPart}`;
-};
+//   const lastId = last.id_pembeli;
+//   const numericPart = parseInt(lastId.slice(3));
+//   const newNumericPart = numericPart + 1;
+//   return `PBL${newNumericPart}`;
+// };
 
 exports.createPembeli = async (req, res) => {
   try {
     const { id_akun, nama, total_poin, tanggal_registrasi } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Pembeli,
+      prefix: 'PBL',
+      fieldName: 'id_pembeli'
+    });
     const pembeli = await Pembeli.create({
       id_pembeli: newId,
       id_akun,

@@ -1,26 +1,17 @@
 const { v4: uuidv4 } = require('uuid');
 const DiskusiProduk = require('../models/diskusiProduk');
-
-const generateNewId = async () => {
-  const last = await DiskusiProduk.findOne({
-    order: [['id_diskusi_produk', 'DESC']]
-  });
-
-  if (!last || !last.id_diskusi_produk || !/^DSK\d{3}$/.test(last.id_diskusi_produk)) {
-    return 'DSK1';
-  }
-
-  const lastId = last.id_diskusi_produk;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `DSK${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createDiskusiProduk = async (req, res) => {
   try {
     const { id_barang, id_customer_service, id_pembeli, pertanyaan, jawaban, tanggal_pertanyaan, tanggal_jawaban } = req.body;
+    const newId = await generateId({
+      model: DiskusiProduk,
+      prefix: 'DSK',
+      fieldName: 'id_diskusi_produk'
+    });
     const diskusi = await DiskusiProduk.create({
-      id_diskusi_produk: uuidv4(),
+      id_diskusi_produk: newId,
       id_barang,
       id_customer_service,
       id_pembeli,

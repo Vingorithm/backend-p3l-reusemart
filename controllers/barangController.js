@@ -1,6 +1,7 @@
 const Barang = require('../models/barang');
 const fs = require('fs');
 const path = require('path');
+const { Op } = require('sequelize');
 
 const generateNewId = async (namaBarang) => {
   if (!namaBarang || namaBarang.length === 0) {
@@ -10,13 +11,18 @@ const generateNewId = async (namaBarang) => {
   const hurufDepan = namaBarang[0].toUpperCase();
 
   const allBarang = await Barang.findAll({
-    attributes: ['id_barang']
+    attributes: ['id_barang'],
+    where: {
+      id_barang: {
+        [Op.like]: `${hurufDepan}%`
+      }
+    }
   });
 
   const allNumericIds = allBarang
     .map(b => {
-      const match = b.id_barang.match(/^[A-Z](\d+)$/);
-      return match ? parseInt(match[1]) : null;
+      const match = b.id_barang.match(/^([A-Z])(\d+)$/);
+      return match && match[1] === hurufDepan ? parseInt(match[2]) : null;
     })
     .filter(id => id !== null);
 
@@ -24,7 +30,6 @@ const generateNewId = async (namaBarang) => {
 
   return `${hurufDepan}${nextNumber}`;
 };
-
 
 exports.createBarang = async (req, res) => {
   try {

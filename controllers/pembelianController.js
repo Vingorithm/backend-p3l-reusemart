@@ -1,23 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Pembelian = require('../models/pembelian');
+const generateId = require('../utils/generateId');
 
-const generateNewId = async () => {
-  const last = await Pembelian.findOne({
-    order: [['id_pembelian', 'DESC']]
-  });
+// const generateNewId = async () => {
+//   const last = await Pembelian.findOne({
+//     order: [['id_pembelian', 'DESC']]
+//   });
 
-  if (!last || !/^PBLN\d+$/.test(last.id_pembelian)) return 'PBLN1';
+//   if (!last || !/^PBLN\d+$/.test(last.id_pembelian)) return 'PBLN1';
 
-  const lastId = last.id_pembelian;
-  const numericPart = parseInt(lastId.slice(4));
-  const newNumericPart = numericPart + 1;
-  return `PBLN${newNumericPart}`;
-};
+//   const lastId = last.id_pembelian;
+//   const numericPart = parseInt(lastId.slice(4));
+//   const newNumericPart = numericPart + 1;
+//   return `PBLN${newNumericPart}`;
+// };
 
 exports.createPembelian = async (req, res) => {
   try {
     const { id_barang, id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Pembelian,
+      prefix: 'PBLN',
+      fieldName: 'id_pembelian'
+    });
     const pembelian = await Pembelian.create({
       id_pembelian: newId,
       id_barang,

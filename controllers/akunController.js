@@ -6,15 +6,16 @@ const fs = require('fs');
 const path = require('path');
 
 const generateNewId = async () => {
-  const lastAkun = await Akun.findOne({
-    order: [['id_akun', 'DESC']]
+  const akunList = await Akun.findAll({
+    attributes: ['id_akun']
   });
 
-  if (!lastAkun) return 'A1';
+  const maxId = akunList.reduce((max, akun) => {
+    const num = parseInt(akun.id_akun.slice(1));
+    return num > max ? num : max;
+  }, 0);
 
-  const lastId = lastAkun.id_akun;
-  const numericPart = parseInt(lastId.slice(1));
-  const newNumericPart = numericPart + 1;
+  const newNumericPart = maxId + 1;
   return `A${newNumericPart}`;
 };
 
@@ -75,6 +76,10 @@ exports.register = async (req, res) => {
 
     res.status(201).json({ message: 'Registrasi berhasil', akun });
   } catch (error) {
+    console.error('REGISTER ERROR:', error);
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
+    }
     res.status(500).json({ error: error.message });
   }
 };

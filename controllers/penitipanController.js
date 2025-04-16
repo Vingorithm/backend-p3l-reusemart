@@ -1,23 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Penitipan = require('../models/penitipan');
+const generateId = require('../utils/generateId');
 
-const generateNewId = async () => {
-  const last = await Penitipan.findOne({
-    order: [['id_penitipan', 'DESC']]
-  });
+// const generateNewId = async () => {
+//   const last = await Penitipan.findOne({
+//     order: [['id_penitipan', 'DESC']]
+//   });
 
-  if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP1';
+//   if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP1';
 
-  const lastId = last.id_penitipan;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `PTP${newNumericPart}`;
-};
+//   const lastId = last.id_penitipan;
+//   const numericPart = parseInt(lastId.slice(3));
+//   const newNumericPart = numericPart + 1;
+//   return `PTP${newNumericPart}`;
+// };
 
 exports.createPenitipan = async (req, res) => {
   try {
     const { id_barang, tanggal_awal_penitipan, tanggal_akhir_penitipan, tanggal_batas_pengambilan, perpanjangan, status_penitipan } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Penitipan,
+      prefix: 'PTP',
+      fieldName: 'id_penitipan'
+    });
     const penitipan = await Penitipan.create({
       id_penitipan: newId,
       id_barang,

@@ -1,23 +1,23 @@
 const { v4: uuidv4 } = require('uuid');
 const AlamatPembeli = require('../models/alamatPembeli');
 
-const generateNewId = async () => {
-  const last = await AlamatPembeli.findOne({
-    order: [['id_alamat', 'DESC']]
+const generateNewId = async (Model, prefix, idField) => {
+  const last = await Model.findOne({
+    order: [[idField, 'DESC']]
   });
 
-  if (!last) return 'ALMT1';
+  if (!last) return `${prefix}1`;
 
-  const lastId = last.id_alamat;
-  const numericPart = parseInt(lastId.slice(4));
+  const lastId = last[idField];
+  const numericPart = parseInt(lastId.replace(/[^\d]/g, ''));
   const newNumericPart = numericPart + 1;
-  return `ALMT${newNumericPart}`;
+  return `${prefix}${newNumericPart}`;
 };
 
 exports.createAlamatPembeli = async (req, res) => {
   try {
     const { id_pembeli, nama_alamat, alamat_lengkap, is_main_address } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateNewId(AlamatPembeli, 'ALMT', 'id_alamat');
     const alamat = await AlamatPembeli.create({
       id_alamat: newId,
       id_pembeli,
@@ -52,7 +52,7 @@ exports.getAlamatPembeliById = async (req, res) => {
 
 exports.updateAlamatPembeli = async (req, res) => {
   try {
-    const { nama_alamat, alamat_lengkap, is_main_address } = req.body;
+    const { id_pembeli, nama_alamat, alamat_lengkap, is_main_address } = req.body;
     const alamat = await AlamatPembeli.findByPk(req.params.id);
     if (!alamat) return res.status(404).json({ message: 'Alamat tidak ditemukan' });
     await alamat.update({ id_pembeli, nama_alamat, alamat_lengkap, is_main_address });

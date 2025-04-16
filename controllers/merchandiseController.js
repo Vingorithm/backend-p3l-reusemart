@@ -1,23 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const Merchandise = require('../models/merchandise');
-
-const generateNewId = async () => {
-  const last = await Merchandise.findOne({
-    order: [['id_merchandise', 'DESC']]
-  });
-
-  if (!last) return 'MRC1';
-
-  const lastId = last.id_merchandise;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `MRC${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createMerchandise = async (req, res) => {
   try {
     const { id_admin, nama_merchandise, harga_poin, deskripsi, gambar, stok_merchandise } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Merchandise,
+      prefix: 'MRC',
+      fieldName: 'id_merchandise'
+    });
     const merchandise = await Merchandise.create({
       id_merchandise: newId,
       id_admin,

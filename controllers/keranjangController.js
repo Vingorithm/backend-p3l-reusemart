@@ -1,23 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const Keranjang = require('../models/keranjang');
-
-const generateNewId = async () => {
-  const last = await Keranjang.findOne({
-    order: [['id_keranjang', 'DESC']]
-  });
-
-  if (!last) return 'KRJ1';
-
-  const lastId = last.id_keranjang;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `KRJ${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createKeranjang = async (req, res) => {
   try {
     const { id_barang, id_pembeli } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Keranjang,
+      prefix: 'KRJ',
+      fieldName: 'id_keranjang'
+    });
     const keranjang = await Keranjang.create({
       id_keranjang: newId,
       id_barang,

@@ -1,25 +1,30 @@
 const { v4: uuidv4 } = require('uuid');
 const BonusTopSeller = require('../models/bonusTopSeller');
+const generateId = require('../utils/generateId');
 
-const generateNewId = async () => {
-  const last = await BonusTopSeller.findOne({
-    order: [['id_bonus_top_seller', 'DESC']]
-  });
+// const generateNewId = async () => {
+//   const last = await BonusTopSeller.findOne({
+//     order: [['id_bonus_top_seller', 'DESC']]
+//   });
 
-  if (!last || !last.id_bonus_top_seller || !/^BTS\d{3}$/.test(last.id_bonus_top_seller)) {
-    return 'BTS1';
-  }
+//   if (!last || !last.id_bonus_top_seller || !/^BTS\d+$/.test(last.id_bonus_top_seller)) {
+//     return 'BTS1';
+//   }
 
-  const lastId = last.id_bonus_top_seller;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `BTS${newNumericPart}`;
-};
+//   const lastId = last.id_bonus_top_seller;
+//   const numericPart = parseInt(lastId.slice(3));
+//   const newNumericPart = numericPart + 1;
+//   return `BTS${newNumericPart}`;
+// };
 
 exports.createBonusTopSeller = async (req, res) => {
   try {
     const { id_penitip, nominal, tanggal_pembayaran } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: BonusTopSeller,
+      prefix: 'BTS',
+      fieldName: 'id_bonus_top_seller'
+    });
     const bonus = await BonusTopSeller.create({
       id_bonus_top_seller: newId,
       id_penitip,

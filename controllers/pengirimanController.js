@@ -1,23 +1,28 @@
 const { v4: uuidv4 } = require('uuid');
 const Pengiriman = require('../models/pengiriman');
+const generateId = require('../utils/generateId');
 
-const generateNewId = async () => {
-  const last = await Pengiriman.findOne({
-    order: [['id_pengiriman', 'DESC']]
-  });
+// const generateNewId = async () => {
+//   const last = await Pengiriman.findOne({
+//     order: [['id_pengiriman', 'DESC']]
+//   });
 
-  if (!last || !/^PGR\d+$/.test(last.id_pengiriman)) return 'PGR1';
+//   if (!last || !/^PGR\d+$/.test(last.id_pengiriman)) return 'PGR1';
 
-  const lastId = last.id_pengiriman;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `PGR${newNumericPart}`;
-};
+//   const lastId = last.id_pengiriman;
+//   const numericPart = parseInt(lastId.slice(3));
+//   const newNumericPart = numericPart + 1;
+//   return `PGR${newNumericPart}`;
+// };
 
 exports.createPengiriman = async (req, res) => {
   try {
     const { id_pembelian, id_pengkonfirmasi, tanggal_mulai, tanggal_berakhir, status_pengiriman, jenis_pengiriman } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Pengiriman,
+      prefix: 'PGR',
+      fieldName: 'id_pengiriman'
+    });
     const pengiriman = await Pengiriman.create({
       id_pengiriman: newId,
       id_pembelian,

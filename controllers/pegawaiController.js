@@ -1,23 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const Pegawai = require('../models/pegawai');
-
-const generateNewId = async () => {
-  const last = await Pegawai.findOne({
-    order: [['id_pegawai', 'DESC']]
-  });
-
-  if (!last || !/^P\d+$/.test(last.id_pegawai)) return 'P1';
-
-  const lastId = last.id_pegawai;
-  const numericPart = parseInt(lastId.slice(1));
-  const newNumericPart = numericPart + 1;
-  return `P${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createPegawai = async (req, res) => {
   try {
     const { id_akun, nama_pegawai, tanggal_lahir } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Pegawai,
+      prefix: 'P',
+      fieldName: 'id_pegawai'
+    });
     const pegawai = await Pegawai.create({
       id_pegawai: newId,
       id_akun,

@@ -1,23 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const OrganisasiAmal = require('../models/organisasiAmal');
-
-const generateNewId = async () => {
-  const last = await OrganisasiAmal.findOne({
-    order: [['id_organisasi_amal', 'DESC']]
-  });
-
-  if (!last) return 'ORG1';
-
-  const lastId = last.id_organisasi_amal;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `ORG${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createOrganisasiAmal = async (req, res) => {
   try {
     const { id_akun, nama_organisasi, alamat, tanggal_registrasi } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: OrganisasiAmal,
+      prefix: 'ORG',
+      fieldName: 'id_organisasi'
+    });
     const organisasi = await OrganisasiAmal.create({
       id_organisasi: newId,
       id_akun,

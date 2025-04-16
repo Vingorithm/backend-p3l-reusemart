@@ -1,25 +1,15 @@
 const { v4: uuidv4 } = require('uuid');
 const ClaimMerchandise = require('../models/claimMerchandise');
-
-const generateNewId = async () => {
-  const last = await ClaimMerchandise.findOne({
-    order: [['id_claim_merchandise', 'DESC']]
-  });
-
-  if (!last || !last.id_claim_merchandise || !/^CLM\d{3}$/.test(last.id_claim_merchandise)) {
-    return 'CLM1';
-  }
-
-  const lastId = last.id_claim_merchandise;
-  const numericPart = parseInt(lastId.slice(3));
-  const newNumericPart = numericPart + 1;
-  return `CLM${newNumericPart}`;
-};
+const generateId = require('../utils/generateId');
 
 exports.createClaimMerchandise = async (req, res) => {
   try {
     const { id_merchandise, id_pembeli, id_customer_service, tanggal_claim, tanggal_ambil, status_claim_merchandise } = req.body;
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: ClaimMerchandise,
+      prefix: 'CLM',
+      fieldName: 'id_claim_merchandise'
+    });
     const claim = await ClaimMerchandise.create({
       id_claim_merchandise: newId,
       id_merchandise,
@@ -31,6 +21,10 @@ exports.createClaimMerchandise = async (req, res) => {
     });
     res.status(201).json(claim);
   } catch (error) {
+    console.error('ERROR:', error);
+    if (error.name === 'SequelizeValidationError') {
+      return res.status(400).json({ error: 'Validation error', details: error.errors });
+    }
     res.status(500).json({ error: error.message });
   }
 };
