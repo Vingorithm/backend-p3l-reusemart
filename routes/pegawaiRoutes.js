@@ -4,7 +4,7 @@ const pegawaiController = require('../controllers/pegawaiController');
 const multer = require('multer');
 const upload = multer();
 
-router.post('/', upload.none(), pegawaiController.createPegawai);
+router.post('/', upload.single('profile_picture'), pegawaiController.createPegawai);
 router.get('/', pegawaiController.getAllPegawai);
 router.get('/:id', pegawaiController.getPegawaiById);
 router.put('/:id', pegawaiController.updatePegawai);
