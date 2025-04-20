@@ -7,7 +7,7 @@ const upload = multer();
 router.post('/', upload.single('profile_picture'), pegawaiController.createPegawai);
 router.get('/', pegawaiController.getAllPegawai);
 router.get('/:id', pegawaiController.getPegawaiById);
-router.put('/:id', pegawaiController.updatePegawai);
+router.put('/:id', upload.single('profile_picture'), pegawaiController.updatePegawai);
 router.delete('/:id', pegawaiController.deletePegawai);
 
 module.exports = router;

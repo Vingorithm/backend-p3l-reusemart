@@ -10,6 +10,11 @@ exports.createPegawai = async (req, res) => {
   try {
     const { nama_pegawai, tanggal_lahir, akun } = req.body;
     
+    let profilePicturePath = null;
+    if (req.file) {
+      profilePicturePath = `/uploads/${req.file.filename}`;
+    }
+
     const newAkunId = await generateId({
       model: Akun,
       prefix: 'A',
@@ -20,7 +25,7 @@ exports.createPegawai = async (req, res) => {
     
     const newAkun = await Akun.create({
       id_akun: newAkunId,
-      profile_picture: akun.profile_picture || null,
+      profile_picture: profilePicturePath || (akun.profile_picture || null),
       email: akun.email,
       password: hashedPassword,
       role: akun.role
@@ -59,7 +64,8 @@ exports.createPegawai = async (req, res) => {
 exports.getAllPegawai = async (req, res) => {
   try {
     const pegawai = await Pegawai.findAll({
-      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }],
+      order: [['id_pegawai', 'ASC']]
     });
     res.status(200).json(pegawai);
   } catch (error) {
@@ -80,13 +86,56 @@ exports.getPegawaiById = async (req, res) => {
 };
 
 exports.updatePegawai = async (req, res) => {
+  const t = await sequelize.transaction();
+  
   try {
-    const { nama_pegawai, tanggal_lahir } = req.body;
+    const { nama_pegawai, tanggal_lahir, akun } = req.body;
     const pegawai = await Pegawai.findByPk(req.params.id);
-    if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
-    await pegawai.update({ nama_pegawai, tanggal_lahir });
-    res.status(200).json(pegawai);
+    
+    if (!pegawai) {
+      await t.rollback();
+      return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
+    }
+    
+    // Update pegawai information
+    await pegawai.update({ 
+      nama_pegawai, 
+      tanggal_lahir 
+    }, { transaction: t });
+    
+    if (akun) {
+      const pegawaiAkun = await Akun.findByPk(pegawai.id_akun);
+      
+      if (!pegawaiAkun) {
+        await t.rollback();
+        return res.status(404).json({ message: 'Akun pegawai tidak ditemukan' });
+      }
+      
+      const updateData = {
+        email: akun.email,
+        role: akun.role
+      };
+      
+      if (akun.password) {
+        updateData.password = await bcrypt.hash(akun.password, 10);
+      }
+      
+      if (req.file) {
+        updateData.profile_picture = `/uploads/${req.file.filename}`;
+      }
+      
+      await pegawaiAkun.update(updateData, { transaction: t });
+    }
+    
+    await t.commit();
+    
+    const updatedPegawai = await Pegawai.findByPk(req.params.id, {
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
+    });
+    
+    res.status(200).json(updatedPegawai);
   } catch (error) {
+    await t.rollback();
     res.status(500).json({ error: error.message });
   }
 };
