@@ -28,10 +28,10 @@ exports.createAkun = async (req, res) => {
 
     const akun = await Akun.create({
       id_akun: newId,
-      profile_picture,
-      email,
+      profile_picture: !profile_picture ? "" : profile_picture,
+      email: email,
       password: hashedPassword,
-      role,
+      role: role,
     });
 
     res.status(201).json(akun);
@@ -54,21 +54,20 @@ exports.register = async (req, res) => {
     const newId = await generateNewId();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let profile_picture = null;
+    // let profile_picture = null;
+    // if (req.file) {
+    //   const fileExtension = path.extname(req.file.originalname);
+    //   const newFilename = `${newId}${fileExtension}`;
+    //   const oldPath = path.join(req.file.destination, req.file.filename);
+    //   const newPath = path.join(req.file.destination, newFilename);
 
-    if (req.file) {
-      const fileExtension = path.extname(req.file.originalname);
-      const newFilename = `${newId}${fileExtension}`;
-      const oldPath = path.join(req.file.destination, req.file.filename);
-      const newPath = path.join(req.file.destination, newFilename);
-
-      fs.renameSync(oldPath, newPath);
-      profile_picture = newFilename;
-    }
+    //   fs.renameSync(oldPath, newPath);
+    //   profile_picture = newFilename;
+    // }
 
     const akun = await Akun.create({
       id_akun: newId,
-      profile_picture,
+      profile_picture: !profile_picture ? "" : profile_picture,
       email,
       password: hashedPassword,
       role,
