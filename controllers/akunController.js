@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 const SECRET_KEY = 'your_secret_key';
 const fs = require('fs');
 const path = require('path');
+const Pembeli = require('../models/pembeli');
+const OrganisasiAmal = require('../models/organisasiAmal');
+const generateId = require('../utils/generateId');
 
 const generateNewId = async () => {
   const akunList = await Akun.findAll({
@@ -23,7 +26,11 @@ exports.createAkun = async (req, res) => {
   try {
     const { email, password, role, profile_picture } = req.body;
 
-    const newId = await generateNewId();
+    const newId = await generateId({
+      model: Akun,
+      prefix: 'A',
+      fieldName: 'id_akun'
+    });
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const akun = await Akun.create({
@@ -42,7 +49,7 @@ exports.createAkun = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { username, email, password, role, alamat } = req.body;
 
     if (!email || !password || !role) {
       return res.status(400).json({ message: 'email, password, dan role wajib diisi' });
@@ -54,7 +61,7 @@ exports.register = async (req, res) => {
     const newId = await generateNewId();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // let profile_picture = null;
+    // let profile_picture = "";
     // if (req.file) {
     //   const fileExtension = path.extname(req.file.originalname);
     //   const newFilename = `${newId}${fileExtension}`;
@@ -67,13 +74,51 @@ exports.register = async (req, res) => {
 
     const akun = await Akun.create({
       id_akun: newId,
-      profile_picture: !profile_picture ? "" : profile_picture,
+      profile_picture: "",
       email,
       password: hashedPassword,
       role,
     });
 
-    res.status(201).json({ message: 'Registrasi berhasil', akun });
+    if(role == "Pembeli") {
+      const new_id_pembeli = await generateId({
+        model: Pembeli,
+        prefix: 'PBL',
+        fieldName: 'id_pembeli'
+      });
+
+      const pembeli = await Pembeli.create({
+        id_pembeli: new_id_pembeli,
+        id_akun: akun.id_akun,
+        nama: username,
+        total_poin: 0,
+        tanggal_registrasi: new Date(),
+      });
+
+      res.status(201).json({ message: 'Registrasi berhasil', akun, pembeli });
+
+    } else if(role == "Organisasi Amal") {
+
+      const new_id_organisasi = await generateId({
+        model: OrganisasiAmal,
+        prefix: 'ORG',
+        fieldName: 'id_organisasi'
+      });
+
+      const organisasi = await OrganisasiAmal.create({
+        id_organisasi: new_id_organisasi,
+        id_akun: akun.id_akun,
+        nama_organisasi: username,
+        alamat: alamat,
+        tanggal_registrasi: new Date(),
+      });
+
+      res.status(201).json({ message: 'Registrasi berhasil', akun, organisasi });
+    } else {
+      res.status(400).json({ message: 'Role tidak diketahui!'});
+    }
+
+    
   } catch (error) {
     console.error('REGISTER ERROR:', error);
     if (error.name === 'SequelizeValidationError') {
