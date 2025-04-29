@@ -86,6 +86,14 @@ exports.createBarang = async (req, res) => {
 exports.getAllBarang = async (req, res) => {
   try {
     const barang = await Barang.findAll();
+
+    const baseUrl = 'http://localhost:3000/uploads/';
+    barang.forEach(b => {
+      if (b.gambar) {
+        b.gambar = baseUrl + b.gambar;
+      }
+    });
+    
     res.status(200).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -96,6 +104,12 @@ exports.getBarangById = async (req, res) => {
   try {
     const barang = await Barang.findByPk(req.params.id);
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
+
+    const baseUrl = 'http://localhost:3000/uploads/'; 
+    if (barang.gambar) {
+      barang.gambar = baseUrl + barang.gambar;
+    }
+
     res.status(200).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });
