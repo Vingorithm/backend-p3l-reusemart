@@ -67,6 +67,32 @@ exports.createPenitip = async (req, res) => {
   }
 };
 
+exports.createPenitipTanpaAkun = async (req, res) => {
+  try {
+    const { id_akun, nama_penitip, foto_ktp, nomor_ktp, keuntungan, rating, badge, total_poin, tanggal_registrasi } = req.body;
+    const newId = await generateId({
+      model: Penitip,
+      prefix: 'T',
+      fieldName: 'id_penitip'
+    });
+    const penitip = await Penitip.create({
+      id_penitip: newId,
+      id_akun,
+      nama_penitip,
+      foto_ktp,
+      nomor_ktp,
+      keuntungan,
+      rating,
+      badge,
+      total_poin,
+      tanggal_registrasi,
+    });
+    res.status(201).json(penitip);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAllPenitip = async (req, res) => {
   try {
     const penitip = await Penitip.findAll({

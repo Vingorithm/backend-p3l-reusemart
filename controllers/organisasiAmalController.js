@@ -62,6 +62,27 @@ exports.createOrganisasiAmal = async (req, res) => {
   }
 };
 
+exports.createOrganisasiAmalTanpaAkun = async (req, res) => {
+  try {
+    const { id_akun, nama_organisasi, alamat, tanggal_registrasi } = req.body;
+    const newId = await generateId({
+      model: OrganisasiAmal,
+      prefix: 'ORG',
+      fieldName: 'id_organisasi'
+    });
+    const organisasi = await OrganisasiAmal.create({
+      id_organisasi: newId,
+      id_akun,
+      nama_organisasi,
+      alamat,
+      tanggal_registrasi,
+    });
+    res.status(201).json(organisasi);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAllOrganisasiAmal = async (req, res) => {
   try {
     const organisasi = await OrganisasiAmal.findAll({

@@ -62,6 +62,27 @@ exports.createPembeli = async (req, res) => {
   }
 };
 
+exports.createPembeliTanpaAkun = async (req, res) => {
+  try {
+    const { id_akun, nama, total_poin, tanggal_registrasi } = req.body;
+    const newId = await generateId({
+      model: Pembeli,
+      prefix: 'PBL',
+      fieldName: 'id_pembeli'
+    });
+    const pembeli = await Pembeli.create({
+      id_pembeli: newId,
+      id_akun,
+      nama,
+      total_poin,
+      tanggal_registrasi,
+    });
+    res.status(201).json(pembeli);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAllPembeli = async (req, res) => {
   try {
     const pembeli = await Pembeli.findAll({

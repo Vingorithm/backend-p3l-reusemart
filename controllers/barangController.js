@@ -47,19 +47,26 @@ exports.createBarang = async (req, res) => {
       kategori_barang
     } = req.body;
 
+    // Generate ID Barang
     const newId = await generateNewId(nama);
 
-    let gambar = null;
+    let imageFilenames = [];
 
-    if (req.file) {
-      const fileExtension = path.extname(req.file.originalname);
-      const newFilename = `${newId}${fileExtension}`;
-      const oldPath = path.join(req.file.destination, req.file.filename);
-      const newPath = path.join(req.file.destination, newFilename);
+    if (req.files && req.files.length > 0) {
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const fileExtension = path.extname(file.originalname);
+        const newFilename = `${newId}_${i + 1}${fileExtension}`;
+        const oldPath = path.join(file.destination, file.filename);
+        const newPath = path.join(file.destination, newFilename);
 
-      fs.renameSync(oldPath, newPath);
-      gambar = newFilename;
+        fs.renameSync(oldPath, newPath);
+        imageFilenames.push(newFilename);
+      }
     }
+
+    // Gabung nama file jadi string terpisah koma
+    const gambar = imageFilenames.length > 0 ? imageFilenames.join(',') : null;
 
     const barang = await Barang.create({
       id_barang: newId,
@@ -90,7 +97,8 @@ exports.getAllBarang = async (req, res) => {
     const baseUrl = 'http://localhost:3000/uploads/';
     barang.forEach(b => {
       if (b.gambar) {
-        b.gambar = baseUrl + b.gambar;
+        const imageArray = b.gambar.split(',').map(img => img.trim());
+        b.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
       }
     });
     
@@ -107,7 +115,8 @@ exports.getBarangById = async (req, res) => {
 
     const baseUrl = 'http://localhost:3000/uploads/'; 
     if (barang.gambar) {
-      barang.gambar = baseUrl + barang.gambar;
+      const imageArray = barang.gambar.split(',').map(img => img.trim());
+      barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
     }
 
     res.status(200).json(barang);
