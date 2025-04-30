@@ -89,7 +89,7 @@ exports.getAllPembeli = async (req, res) => {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }],
       order: [['id_pembeli', 'ASC']]
     });
-    res.status(200).json(pembeli);
+    res.status(200).json({message: "Data berhasil didapatkan!", pembeli});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -101,7 +101,7 @@ exports.getPembeliById = async (req, res) => {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
     });
     if (!pembeli) return res.status(404).json({ message: 'Pembeli tidak ditemukan' });
-    res.status(200).json(pembeli);
+    res.status(200).json({message: "Data berhasil ditemukan!", pembeli});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -156,7 +156,7 @@ exports.updatePembeli = async (req, res) => {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
     });
     
-    res.status(200).json(updatedPembeli);
+    res.status(200).json({message: "Data berhasil diubah!", updatedPembeli});
   } catch (error) {
     await t.rollback();
     res.status(500).json({ error: error.message });
@@ -180,7 +180,7 @@ exports.deletePembeli = async (req, res) => {
     }
     
     await t.commit();
-    res.status(204).json();
+    res.status(200).json({message: "Data berhasil dihapus!", pembeli, akun});
   } catch (error) {
     await t.rollback();
     res.status(500).json({ error: error.message });
@@ -199,6 +199,17 @@ exports.getAkunByPembeliId = async (req, res) => {
     if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
     
     res.status(200).json(akun);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPembeliByAkunId = async (req, res) => {
+  try {
+    const pembeli = await Pembeli.findOne({ where: { id_akun: req.params.id } });
+    if (!pembeli) return res.status(404).json({ message: 'Pembeli tidak ditemukan' });
+    
+    res.status(200).json({message: "Data berhasil ditemukan!", pembeli});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

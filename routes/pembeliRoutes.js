@@ -7,6 +7,7 @@ const upload = multer();
 router.post('/', upload.none(), pembeliController.createPembeli);
 router.get('/', pembeliController.getAllPembeli);
 router.get('/:id', pembeliController.getPembeliById);
+router.get('/byIdAkun/:id', pembeliController.getPembeliByAkunId);
 router.put('/:id', pembeliController.updatePembeli);
 router.delete('/:id', pembeliController.deletePembeli);
 
