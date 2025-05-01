@@ -9,5 +9,6 @@ router.get('/', diskusiProdukController.getAllDiskusiProduk);
 router.get('/:id', diskusiProdukController.getDiskusiProdukById);
 router.put('/:id', diskusiProdukController.updateDiskusiProduk);
 router.delete('/:id', diskusiProdukController.deleteDiskusiProduk);
+router.get('/byIdBarang/:id', diskusiController.getDiskusiProdukByIdBarang);
 
 module.exports = router;
