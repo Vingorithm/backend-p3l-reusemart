@@ -1,23 +1,41 @@
+const { sequelize } = require('../config/database');
 const DiskusiProduk = require('../models/diskusiProduk');
 const Pembeli = require('../models/pembeli');
-const Penitip = require('../models/penitip');
-const { sequelize } = require('../config/database');
+const Pegawai = require('../models/pegawai');
+const Barang = require('../models/barang');
 
 exports.getAllDiskusiProduk = async (req, res) => {
   try {
-    const diskusi = await DiskusiProduk.findAll();
+    const diskusi = await DiskusiProduk.findAll({
+      include: [
+        { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        { model: Pegawai, attributes: ['id_pegawai', 'nama_pegawai'] }
+      ]
+    });
     res.status(200).json(diskusi);
   } catch (error) {
+    console.error('Error getting all discussions:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.getDiskusiProdukById = async (req, res) => {
   try {
-    const diskusi = await DiskusiProduk.findByPk(req.params.id);
-    if (!diskusi) return res.status(404).json({ message: 'Diskusi tidak ditemukan' });
+    const diskusi = await DiskusiProduk.findByPk(req.params.id, {
+      include: [
+        { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        { model: Pegawai, attributes: ['id_pegawai', 'nama_pegawai'] },
+        { model: Barang, attributes: ['id_barang', 'nama'] }
+      ]
+    });
+    
+    if (!diskusi) {
+      return res.status(404).json({ message: 'Diskusi tidak ditemukan' });
+    }
+    
     res.status(200).json(diskusi);
   } catch (error) {
+    console.error('Error getting discussion by ID:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -26,18 +44,19 @@ exports.getDiskusiProdukByIdBarang = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const diskusi = await sequelize.query(`
-      SELECT d.*,
-             p.nama as nama_penanya,
-             cs.nama_pegawai as nama_penjawab
-      FROM DiskusiProduk d
-      LEFT JOIN Pembeli p ON d.id_pembeli = p.id_pembeli
-      LEFT JOIN Pegawai cs ON d.id_customer_service = cs.id_pegawai
-      WHERE d.id_barang = :id
-      ORDER BY d.tanggal_pertanyaan DESC
-    `, {
-      replacements: { id },
-      type: sequelize.QueryTypes.SELECT
+    const diskusi = await DiskusiProduk.findAll({
+      where: { id_barang: id },
+      include: [
+        { 
+          model: Pembeli, 
+          attributes: ['id_pembeli', 'nama'] 
+        },
+        { 
+          model: Pegawai, 
+          attributes: ['id_pegawai', 'nama_pegawai'] 
+        }
+      ],
+      order: [['tanggal_pertanyaan', 'DESC']]
     });
     
     res.status(200).json(diskusi);
@@ -51,26 +70,46 @@ exports.createDiskusiProduk = async (req, res) => {
   try {
     const { id_barang, id_pembeli, pertanyaan } = req.body;
     
+    if (!id_barang || !id_pembeli || !pertanyaan || pertanyaan.trim() === '') {
+      return res.status(400).json({ 
+        message: 'ID barang, ID pembeli, dan pertanyaan diperlukan' 
+      });
+    }
+    
     const diskusi = await DiskusiProduk.create({
-      id_diskusi: `DSK${Date.now()}`,
+      id_diskusi_produk: `DSK${Date.now()}`,
       id_barang,
       id_pembeli,
+      id_customer_service: null,
       pertanyaan,
-      tanggal_pertanyaan: new Date(),
-      id_penitip: null,
       jawaban: null,
+      tanggal_pertanyaan: new Date(),
       tanggal_jawaban: null
     });
     
-    res.status(201).json(diskusi);
+    const createdDiskusi = await DiskusiProduk.findByPk(diskusi.id_diskusi_produk, {
+      include: [
+        { model: Pembeli, attributes: ['id_pembeli', 'nama'] }
+      ]
+    });
+    
+    res.status(201).json(createdDiskusi);
   } catch (error) {
+    console.error('Error creating discussion:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.updateDiskusiProduk = async (req, res) => {
   try {
-    const { id_penitip, jawaban } = req.body;
+    const { id_customer_service, jawaban } = req.body;
+    
+    if (!id_customer_service || !jawaban || jawaban.trim() === '') {
+      return res.status(400).json({ 
+        message: 'ID customer service dan jawaban diperlukan' 
+      });
+    }
+    
     const diskusi = await DiskusiProduk.findByPk(req.params.id);
     
     if (!diskusi) {
@@ -78,13 +117,21 @@ exports.updateDiskusiProduk = async (req, res) => {
     }
     
     await diskusi.update({ 
-      id_penitip, 
+      id_customer_service, 
       jawaban, 
       tanggal_jawaban: new Date() 
     });
     
-    res.status(200).json(diskusi);
+    const updatedDiskusi = await DiskusiProduk.findByPk(diskusi.id_diskusi_produk, {
+      include: [
+        { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
+        { model: Pegawai, attributes: ['id_pegawai', 'nama_pegawai'] }
+      ]
+    });
+    
+    res.status(200).json(updatedDiskusi);
   } catch (error) {
+    console.error('Error updating discussion:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -98,8 +145,9 @@ exports.deleteDiskusiProduk = async (req, res) => {
     }
     
     await diskusi.destroy();
-    res.status(204).json();
+    res.status(204).send();
   } catch (error) {
+    console.error('Error deleting discussion:', error);
     res.status(500).json({ error: error.message });
   }
 };

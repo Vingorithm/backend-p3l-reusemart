@@ -2,11 +2,11 @@ const express = require('express');
 const router = express.Router();
 const pegawaiController = require('../controllers/pegawaiController');
 const multer = require('multer');
+const path = require('path');
 
-// Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // sesuaikan dengan folder tujuan penyimpanan
+      cb(null, 'uploads/');
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
