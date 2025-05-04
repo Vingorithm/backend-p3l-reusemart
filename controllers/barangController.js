@@ -47,7 +47,6 @@ exports.createBarang = async (req, res) => {
       kategori_barang
     } = req.body;
 
-    // Generate ID Barang
     const newId = await generateNewId(nama);
 
     let imageFilenames = [];
@@ -65,7 +64,6 @@ exports.createBarang = async (req, res) => {
       }
     }
 
-    // Gabung nama file jadi string terpisah koma
     const gambar = imageFilenames.length > 0 ? imageFilenames.join(',') : null;
 
     const barang = await Barang.create({
@@ -94,7 +92,7 @@ exports.getAllBarang = async (req, res) => {
   try {
     const barang = await Barang.findAll();
 
-    const baseUrl = 'http://localhost:3000/uploads/';
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
     barang.forEach(b => {
       if (b.gambar) {
         const imageArray = b.gambar.split(',').map(img => img.trim());
@@ -113,7 +111,7 @@ exports.getBarangById = async (req, res) => {
     const barang = await Barang.findByPk(req.params.id);
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = 'http://localhost:3000/uploads/'; 
+    const baseUrl = 'http://localhost:3000/uploads/barang/'; 
     if (barang.gambar) {
       const imageArray = barang.gambar.split(',').map(img => img.trim());
       barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');

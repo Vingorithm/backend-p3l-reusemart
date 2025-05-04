@@ -1,6 +1,8 @@
 const { v4: uuidv4 } = require('uuid');
 const RequestDonasi = require('../models/requestDonasi');
 const generateId = require('../utils/generateId');
+const Organisasi = require('../models/organisasiAmal');
+const Akun = require('../models/akun');
 
 // const generateNewId = async () => {
 //   const last = await RequestDonasi.findOne({
@@ -38,12 +40,28 @@ exports.createRequestDonasi = async (req, res) => {
 
 exports.getAllRequestDonasi = async (req, res) => {
   try {
-    const request = await RequestDonasi.findAll();
+    const request = await RequestDonasi.findAll({
+      include: [
+        {
+          model: Organisasi,
+          attributes: ['id_organisasi', 'id_akun', 'nama_organisasi', 'alamat', 'tanggal_registrasi'],
+          include: [
+            {
+              model: Akun,
+              attributes: ['id_akun', 'email', 'profile_picture']
+            }
+          ]
+        }
+      ],
+      order: [['id_organisasi', 'ASC']]
+    });
+
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getRequestDonasiById = async (req, res) => {
   try {
