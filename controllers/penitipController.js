@@ -134,11 +134,21 @@ exports.getAllPenitip = async (req, res) => {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }],
       order: [['id_penitip', 'ASC']]
     });
+
+    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
+
+    penitip.forEach(p => {
+      if (p.Akun && p.Akun.profile_picture) {
+        p.Akun.profile_picture = `${baseUrl}${p.Akun.profile_picture}`;
+      }
+    });
+
     res.status(200).json(penitip);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.getPenitipById = async (req, res) => {
   try {
