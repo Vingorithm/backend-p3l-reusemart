@@ -8,18 +8,33 @@ exports.createPenitip = async (req, res) => {
   const t = await sequelize.transaction();
   
   try {
-    const { nama_penitip, foto_ktp, nomor_ktp, tanggal_registrasi, akun } = req.body;
+    const { nama_penitip, foto_ktp, nomor_ktp, akun } = req.body;
     
-    let profilePicturePath = null;
-    if (req.file) {
-      profilePicturePath = `/uploads/${req.file.filename}`;
-    }
-
     const newAkunId = await generateId({
       model: Akun,
       prefix: 'A',
       fieldName: 'id_akun'
     });
+
+    // buat var penampung
+    let profilePicturePath = null;
+    let profilePictureName = null;
+
+    // cek apa ada file
+    if (req.files) {
+      // ambil file
+      const profilePictureFile = req.files.profile_picture?.[0];
+      // ambil extension file
+      const ext = path.extname(profilePicFile.originalname);
+      // buat nama baru
+      const newName = `pp${newAkunId}${ext}`;
+      // pindah file ke path baru
+      const destPath = `uploads/profile_picture/${newName}`;
+      fs.renameSync(profilePicFile.path, destPath);
+      // ambil data terbaru
+      profilePicturePath = `/uploads/profile_picture/${newName}`;
+      profilePictureName = newName;
+    }
     
     const hashedPassword = await bcrypt.hash(akun.password || 'defaultPassword', 10);
     
@@ -28,7 +43,7 @@ exports.createPenitip = async (req, res) => {
       profile_picture: profilePicturePath || (akun.profile_picture || null),
       email: akun.email,
       password: hashedPassword,
-      role: akun.role
+      role: "Penitip"
     }, { transaction: t });
     
     const newPenitipId = await generateId({
@@ -36,6 +51,26 @@ exports.createPenitip = async (req, res) => {
       prefix: 'T',
       fieldName: 'id_penitip'
     });
+
+    // buat var penampung
+    let fotoKtpPath = null;
+    let fotoKtpName = null;
+
+    // cek apa ada file
+    if (req.files) {
+      // ambil file
+      const fotoKtpFile = req.files.foto_ktp?.[0];
+      // ambil extension file
+      const ext = path.extname(profilePicFile.originalname);
+      // buat nama baru
+      const newName = `ktp${newAkunId}${ext}`;
+      // pindah file ke path baru
+      const destPath = `uploads/profile_picture/${newName}`;
+      fs.renameSync(profilePicFile.path, destPath);
+      // ambil data terbaru
+      fotoKtpPath = `/uploads/profile_picture/${newName}`;
+      fotoKtpName = newName;
+    }
     
     const penitip = await Penitip.create({
       id_penitip: newPenitipId,
@@ -45,9 +80,9 @@ exports.createPenitip = async (req, res) => {
       nomor_ktp,
       keuntungan: 0, // Default values
       rating: 0,
-      badge: 'Pemula',
+      badge: 0,
       total_poin: 0,
-      tanggal_registrasi,
+      tanggal_registrasi: new Date(),
     }, { transaction: t });
     
     await t.commit();
@@ -214,6 +249,17 @@ exports.getAkunByPenitipId = async (req, res) => {
     if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
     
     res.status(200).json(akun);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPenitipByAkunId = async (req, res) => {
+  try {
+    const penitip = await Penitip.findOne({ where: { id_akun: req.params.id } });
+    if (!penitip) return res.status(404).json({ message: 'Penitip tidak ditemukan' });
+    
+    res.status(200).json({message: "Data berhasil didapatkan", penitip});
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

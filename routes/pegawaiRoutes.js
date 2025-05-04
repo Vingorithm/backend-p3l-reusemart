@@ -20,6 +20,7 @@ const upload = multer({ storage });
 router.post('/', upload.single('profile_picture'), pegawaiController.createPegawai);
 router.get('/', pegawaiController.getAllPegawai);
 router.get('/:id', pegawaiController.getPegawaiById);
+router.get('/byIdAkun/:id', pegawaiController.getPegawaiByIdAkun);
 router.put('/:id', upload.single('profile_picture'), async (req, res) => {
     console.log(req.body);
     console.log(req.file);
