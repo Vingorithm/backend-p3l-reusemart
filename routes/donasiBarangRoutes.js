@@ -9,5 +9,6 @@ router.get('/', donasiBarangController.getAllDonasiBarang);
 router.get('/:id', donasiBarangController.getDonasiBarangById);
 router.put('/:id', donasiBarangController.updateDonasiBarang);
 router.delete('/:id', donasiBarangController.deleteDonasiBarang);
+router.get('/byIdRequest/:id', donasiBarangController.getDonasiBarangByIdRequestDonasi);
 
 module.exports = router;

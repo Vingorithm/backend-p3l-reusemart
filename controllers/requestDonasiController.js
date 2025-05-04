@@ -65,13 +65,31 @@ exports.getAllRequestDonasi = async (req, res) => {
 
 exports.getRequestDonasiById = async (req, res) => {
   try {
-    const request = await RequestDonasi.findByPk(req.params.id);
-    if (!request) return res.status(404).json({ message: 'Request donasi tidak ditemukan' });
+    const request = await RequestDonasi.findByPk(req.params.id, {
+      include: [
+        {
+          model: Organisasi,
+          attributes: ['id_organisasi', 'id_akun', 'nama_organisasi', 'alamat', 'tanggal_registrasi'],
+          include: [
+            {
+              model: Akun,
+              attributes: ['id_akun', 'email', 'profile_picture']
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!request) {
+      return res.status(404).json({ message: 'Request donasi tidak ditemukan' });
+    }
+
     res.status(200).json(request);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.updateRequestDonasi = async (req, res) => {
   try {
