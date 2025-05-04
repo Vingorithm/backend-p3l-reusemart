@@ -7,6 +7,7 @@ const upload = multer();
 router.post('/', upload.none(), penitipController.createPenitip);
 router.get('/', penitipController.getAllPenitip);
 router.get('/:id', penitipController.getPenitipById);
+router.get('/byIdAkun/:id', penitipController.getPenitipByAkunId);
 router.put('/:id', penitipController.updatePenitip);
 router.delete('/:id', penitipController.deletePenitip);
 

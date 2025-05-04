@@ -3,6 +3,7 @@ const DiskusiProduk = require('../models/diskusiProduk');
 const Pembeli = require('../models/pembeli');
 const Pegawai = require('../models/pegawai');
 const Barang = require('../models/barang');
+const generateId = require('../utils/generateId');
 
 exports.getAllDiskusiProduk = async (req, res) => {
   try {
@@ -68,19 +69,25 @@ exports.getDiskusiProdukByIdBarang = async (req, res) => {
 
 exports.createDiskusiProduk = async (req, res) => {
   try {
-    const { id_barang, id_pembeli, pertanyaan } = req.body;
+    const { id_barang, id_pembeli, id_customer_service, pertanyaan } = req.body;
     
     if (!id_barang || !id_pembeli || !pertanyaan || pertanyaan.trim() === '') {
       return res.status(400).json({ 
         message: 'ID barang, ID pembeli, dan pertanyaan diperlukan' 
       });
     }
+
+    const newId = await generateId({
+      model: DiskusiProduk,
+      prefix: 'DSK',
+      fieldName: 'id_diskusi_produk'
+    });
     
     const diskusi = await DiskusiProduk.create({
-      id_diskusi_produk: `DSK${Date.now()}`,
+      id_diskusi_produk: newId,
       id_barang,
       id_pembeli,
-      id_customer_service: null,
+      id_customer_service: id_customer_service,
       pertanyaan,
       jawaban: null,
       tanggal_pertanyaan: new Date(),

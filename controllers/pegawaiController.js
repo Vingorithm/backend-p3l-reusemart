@@ -208,3 +208,13 @@ exports.getAkunByPegawaiId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPegawaiByIdAkun = async (req, res) => {
+  try {
+    const pegawai = await Pegawai.findOne({ where: { id_akun: req.params.id } });
+    if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
+    res.status(200).json(pegawai);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
