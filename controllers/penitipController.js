@@ -3,127 +3,151 @@ const Akun = require('../models/akun');
 const bcrypt = require('bcryptjs');
 const generateId = require('../utils/generateId');
 const sequelize = require('../config/database');
+const path = require('path');
+const fs = require('fs');
 
 exports.createPenitip = async (req, res) => {
   const t = await sequelize.transaction();
-  
+
   try {
-    const { nama_penitip, foto_ktp, nomor_ktp, akun } = req.body;
-    
+    const { nama_penitip, nomor_ktp, akun } = req.body;
+
+    // Validasi akun
+    if (!akun || !akun.email) {
+      if (req.files) {
+        if (req.files.profile_picture) {
+          fs.unlinkSync(req.files.profile_picture[0].path);
+          console.log(`Deleted temporary profile_picture: ${req.files.profile_picture[0].path}`);
+        }
+        if (req.files.foto_ktp) {
+          fs.unlinkSync(req.files.foto_ktp[0].path);
+          console.log(`Deleted temporary foto_ktp: ${req.files.foto_ktp[0].path}`);
+        }
+      }
+      await t.rollback();
+      return res.status(400).json({ error: 'Email tidak boleh kosong' });
+    }
+
+    // Cek email duplikat sebelum memproses file
+    const existingAkun = await Akun.findOne({ where: { email: akun.email } });
+    if (existingAkun) {
+      if (req.files) {
+        if (req.files.profile_picture) {
+          fs.unlinkSync(req.files.profile_picture[0].path);
+          console.log(`Deleted temporary profile_picture: ${req.files.profile_picture[0].path}`);
+        }
+        if (req.files.foto_ktp) {
+          fs.unlinkSync(req.files.foto_ktp[0].path);
+          console.log(`Deleted temporary foto_ktp: ${req.files.foto_ktp[0].path}`);
+        }
+      }
+      await t.rollback();
+      return res.status(400).json({ error: 'Email sudah digunakan' });
+    }
+
     const newAkunId = await generateId({
       model: Akun,
       prefix: 'A',
-      fieldName: 'id_akun'
+      fieldName: 'id_akun',
     });
 
-    // buat var penampung
+    // Penanganan profile_picture
     let profilePicturePath = null;
     let profilePictureName = null;
 
-    // cek apa ada file
-    if (req.files) {
-      // ambil file
-      const profilePictureFile = req.files.profile_picture?.[0];
-      // ambil extension file
-      const ext = path.extname(profilePicFile.originalname);
-      // buat nama baru
-      const newName = `pp${newAkunId}${ext}`;
-      // pindah file ke path baru
+    if (req.files && req.files.profile_picture) {
+      const profilePictureFile = req.files.profile_picture[0];
+      const ext = path.extname(profilePictureFile.originalname);
+      const newName = `pp${newAkunId.slice(1)}${ext}`;
       const destPath = `uploads/profile_picture/${newName}`;
-      fs.renameSync(profilePicFile.path, destPath);
-      // ambil data terbaru
-      profilePicturePath = `/uploads/profile_picture/${newName}`;
+      console.log('Renaming profile_picture from:', profilePictureFile.path, 'to:', destPath);
+      fs.renameSync(profilePictureFile.path, destPath);
+      profilePicturePath = newName;
       profilePictureName = newName;
     }
-    
+
     const hashedPassword = await bcrypt.hash(akun.password || 'defaultPassword', 10);
-    
-    const newAkun = await Akun.create({
-      id_akun: newAkunId,
-      profile_picture: profilePicturePath || (akun.profile_picture || null),
-      email: akun.email,
-      password: hashedPassword,
-      role: "Penitip"
-    }, { transaction: t });
-    
+
+    const newAkun = await Akun.create(
+      {
+        id_akun: newAkunId,
+        profile_picture: profilePicturePath || null,
+        email: akun.email,
+        password: hashedPassword,
+        role: 'Penitip',
+      },
+      { transaction: t }
+    );
+
     const newPenitipId = await generateId({
       model: Penitip,
       prefix: 'T',
-      fieldName: 'id_penitip'
+      fieldName: 'id_penitip',
     });
 
-    // buat var penampung
+    // Penanganan foto_ktp
     let fotoKtpPath = null;
     let fotoKtpName = null;
 
-    // cek apa ada file
-    if (req.files) {
-      // ambil file
-      const fotoKtpFile = req.files.foto_ktp?.[0];
-      // ambil extension file
-      const ext = path.extname(profilePicFile.originalname);
-      // buat nama baru
-      const newName = `ktp${newAkunId}${ext}`;
-      // pindah file ke path baru
-      const destPath = `uploads/profile_picture/${newName}`;
-      fs.renameSync(profilePicFile.path, destPath);
-      // ambil data terbaru
-      fotoKtpPath = `/uploads/profile_picture/${newName}`;
+    if (req.files && req.files.foto_ktp) {
+      const fotoKtpFile = req.files.foto_ktp[0];
+      const ext = path.extname(fotoKtpFile.originalname);
+      const newName = `ktp${newPenitipId.slice(1)}${ext}`;
+      const destPath = `uploads/ktp/${newName}`;
+      console.log('Renaming foto_ktp from:', fotoKtpFile.path, 'to:', destPath);
+      fs.renameSync(fotoKtpFile.path, destPath);
+      fotoKtpPath = newName;
       fotoKtpName = newName;
     }
-    
-    const penitip = await Penitip.create({
-      id_penitip: newPenitipId,
-      id_akun: newAkunId,
-      nama_penitip,
-      foto_ktp,
-      nomor_ktp,
-      keuntungan: 0, // Default values
-      rating: 0,
-      badge: 0,
-      total_poin: 0,
-      tanggal_registrasi: new Date(),
-    }, { transaction: t });
-    
+
+    const penitip = await Penitip.create(
+      {
+        id_penitip: newPenitipId,
+        id_akun: newAkunId,
+        nama_penitip,
+        foto_ktp: fotoKtpPath,
+        nomor_ktp,
+        keuntungan: 0,
+        rating: 0,
+        badge: 0,
+        total_poin: 0,
+        tanggal_registrasi: new Date(),
+      },
+      { transaction: t }
+    );
+
     await t.commit();
-    
+
     const result = {
       ...penitip.dataValues,
       akun: {
         ...newAkun.dataValues,
-        password: undefined
-      }
+        password: undefined,
+      },
     };
-    
+
     res.status(201).json(result);
   } catch (error) {
-    await t.rollback();
-    res.status(500).json({ error: error.message });
-  }
-};
+    // Hapus file yang sudah dipindahkan jika terjadi error
+    if (req.files) {
+      if (req.files.profile_picture) {
+        const profilePicturePath = `uploads/profile_picture/pp${newAkunId?.slice(1)}${path.extname(req.files.profile_picture[0].originalname)}`;
+        if (fs.existsSync(profilePicturePath)) {
+          fs.unlinkSync(profilePicturePath);
+          console.log(`Deleted profile_picture: ${profilePicturePath}`);
+        }
+      }
+      if (req.files.foto_ktp) {
+        const fotoKtpPath = `uploads/ktp/ktp${newPenitipId?.slice(1)}${path.extname(req.files.foto_ktp[0].originalname)}`;
+        if (fs.existsSync(fotoKtpPath)) {
+          fs.unlinkSync(fotoKtpPath);
+          console.log(`Deleted foto_ktp: ${fotoKtpPath}`);
+        }
+      }
+    }
 
-exports.createPenitipTanpaAkun = async (req, res) => {
-  try {
-    const { id_akun, nama_penitip, foto_ktp, nomor_ktp, keuntungan, rating, badge, total_poin, tanggal_registrasi } = req.body;
-    const newId = await generateId({
-      model: Penitip,
-      prefix: 'T',
-      fieldName: 'id_penitip'
-    });
-    const penitip = await Penitip.create({
-      id_penitip: newId,
-      id_akun,
-      nama_penitip,
-      foto_ktp,
-      nomor_ktp,
-      keuntungan,
-      rating,
-      badge,
-      total_poin,
-      tanggal_registrasi,
-    });
-    res.status(201).json(penitip);
-  } catch (error) {
+    await t.rollback();
+    console.error('Error creating penitip:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -231,10 +255,39 @@ exports.deletePenitip = async (req, res) => {
     if (!penitip) return res.status(404).json({ message: 'Penitip tidak ditemukan' });
     
     const akunId = penitip.id_akun;
-    
-    await penitip.destroy({ transaction: t });
+    const fotoKtpFile = penitip.foto_ktp; 
     
     const akun = await Akun.findByPk(akunId);
+    const profilePictureFile = akun ? akun.profile_picture : null; 
+    
+    // Hapus file foto_ktp jika ada
+    if (fotoKtpFile) {
+      const fotoKtpPath = path.join('uploads', 'ktp', fotoKtpFile);
+      try {
+        if (fs.existsSync(fotoKtpPath)) {
+          fs.unlinkSync(fotoKtpPath);
+          console.log(`Deleted foto_ktp: ${fotoKtpPath}`);
+        }
+      } catch (error) {
+        console.error(`Failed to delete foto_ktp ${fotoKtpPath}:`, error.message);
+      }
+    }
+    
+    // Hapus file profile_picture jika ada
+    if (profilePictureFile) {
+      const profilePicturePath = path.join('uploads', 'profile_picture', profilePictureFile);
+      try {
+        if (fs.existsSync(profilePicturePath)) {
+          fs.unlinkSync(profilePicturePath);
+          console.log(`Deleted profile_picture: ${profilePicturePath}`);
+        }
+      } catch (error) {
+        console.error(`Failed to delete profile_picture ${profilePicturePath}:`, error.message);
+      }
+    }
+    
+    
+    await penitip.destroy({ transaction: t });
     if (akun) {
       await akun.destroy({ transaction: t });
     }
