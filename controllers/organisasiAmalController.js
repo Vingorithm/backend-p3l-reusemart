@@ -3,12 +3,14 @@ const Akun = require('../models/akun');
 const bcrypt = require('bcryptjs');
 const generateId = require('../utils/generateId');
 const sequelize = require('../config/database');
+const path = require('path');
+const fs = require('fs');
 
 exports.createOrganisasiAmal = async (req, res) => {
   const t = await sequelize.transaction();
   
   try {
-    const { nama_organisasi, alamat, tanggal_registrasi, akun } = req.body;
+    const { nama_organisasi, alamat, akun } = req.body;
     
     let profilePicturePath = null;
     if (req.file) {
@@ -25,7 +27,7 @@ exports.createOrganisasiAmal = async (req, res) => {
     
     const newAkun = await Akun.create({
       id_akun: newAkunId,
-      profile_picture: profilePicturePath || (akun.profile_picture || null),
+      profile_picture: akun.profile_picture,
       email: akun.email,
       password: hashedPassword,
       role: akun.role
@@ -42,7 +44,7 @@ exports.createOrganisasiAmal = async (req, res) => {
       id_akun: newAkunId,
       nama_organisasi,
       alamat,
-      tanggal_registrasi,
+      tanggal_registrasi: new Date(),
     }, { transaction: t });
     
     await t.commit();
@@ -58,7 +60,7 @@ exports.createOrganisasiAmal = async (req, res) => {
     res.status(201).json(result);
   } catch (error) {
     await t.rollback();
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, input: req.body });
   }
 };
 
@@ -111,7 +113,7 @@ exports.updateOrganisasiAmal = async (req, res) => {
   const t = await sequelize.transaction();
   
   try {
-    const { nama_organisasi, alamat, tanggal_registrasi, akun } = req.body;
+    const { nama_organisasi, alamat} = req.body;
     const organisasi = await OrganisasiAmal.findByPk(req.params.id);
     
     if (!organisasi) {
@@ -122,32 +124,26 @@ exports.updateOrganisasiAmal = async (req, res) => {
     // Update organisasi information
     await organisasi.update({ 
       nama_organisasi, 
-      alamat, 
-      tanggal_registrasi 
+      alamat
     }, { transaction: t });
-    
+
+    const akun = await Akun.findByPk(organisasi.id_akun);  
     if (akun) {
-      const organisasiAkun = await Akun.findByPk(organisasi.id_akun);
-      
-      if (!organisasiAkun) {
-        await t.rollback();
-        return res.status(404).json({ message: 'Akun organisasi tidak ditemukan' });
-      }
-      
-      const updateData = {
-        email: akun.email,
-        role: akun.role
-      };
-      
-      if (akun.password) {
-        updateData.password = await bcrypt.hash(akun.password, 10);
-      }
-      
       if (req.file) {
-        updateData.profile_picture = `/uploads/${req.file.filename}`;
+        const ext = path.extname(req.file.originalname);
+        const newFileName = `pp${akun.id_akun}${ext}`;
+        const newPath = path.join(__dirname, '../uploads/profile_picture', newFileName);
+  
+        // Rename file
+        fs.renameSync(req.file.path, newPath);
+  
+        // Update nama file di database
+        akun.profile_picture = newFileName;
+        await akun.save({ transaction: t });
       }
-      
-      await organisasiAkun.update(updateData, { transaction: t });
+    } else {
+      await t.rollback();
+      return res.status(404).json({ message: 'Akun organisasi tidak ditemukan' });
     }
     
     await t.commit();
