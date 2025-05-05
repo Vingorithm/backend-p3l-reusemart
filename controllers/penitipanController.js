@@ -1,5 +1,8 @@
 const { v4: uuidv4 } = require('uuid');
 const Penitipan = require('../models/penitipan');
+const Barang = require('../models/barang');
+const Penitip = require('../models/penitip');
+const Akun = require('../models/akun');
 const generateId = require('../utils/generateId');
 
 // const generateNewId = async () => {
@@ -40,7 +43,25 @@ exports.createPenitipan = async (req, res) => {
 
 exports.getAllPenitipan = async (req, res) => {
   try {
-    const penitipan = await Penitipan.findAll();
+    const penitipan = await Penitipan.findAll({
+      include: [
+        {
+          model: Barang,
+          attributes: ['id_barang', 'id_penitip', 'id_hunter', 'id_pegawai_gudang', 'nama', 'gambar', 'harga', 'garansi_berlaku', 'tanggal_garansi', 'berat', 'status_qc', 'kategori_barang'],
+          include: [
+            {
+              model: Penitip,
+              attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            }
+          ]
+        }
+      ],
+      order: [['id_barang', 'ASC']]
+    });
     res.status(200).json(penitipan);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -49,7 +70,25 @@ exports.getAllPenitipan = async (req, res) => {
 
 exports.getPenitipanById = async (req, res) => {
   try {
-    const penitipan = await Penitipan.findByPk(req.params.id);
+    const penitipan = await Penitipan.findByPk(req.params.id, {
+      include: [
+        {
+          model: Barang,
+          attributes: ['id_barang', 'id_penitip', 'id_hunter', 'id_pegawai_gudang', 'nama', 'gambar', 'harga', 'garansi_berlaku', 'tanggal_garansi', 'berat', 'status_qc', 'kategori_barang'],
+          include: [
+            {
+              model: Penitip,
+              attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            }
+          ]
+        }
+      ],
+      order: [['id_barang', 'ASC']]
+    });
     if (!penitipan) return res.status(404).json({ message: 'Penitipan tidak ditemukan' });
     res.status(200).json(penitipan);
   } catch (error) {

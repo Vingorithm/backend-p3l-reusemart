@@ -90,6 +90,14 @@ exports.getAllPegawai = async (req, res) => {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }],
       order: [['id_pegawai', 'ASC']]
     });
+
+    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
+    pegawai.forEach(p => {
+      if (p.Akun && p.Akun.profile_picture) {
+        p.Akun.profile_picture = `${baseUrl}${p.Akun.profile_picture}`;
+      }
+    });
+
     res.status(200).json(pegawai);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -101,7 +109,14 @@ exports.getPegawaiById = async (req, res) => {
     const pegawai = await Pegawai.findByPk(req.params.id, {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
     });
+
     if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
+
+    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
+    if (pegawai.Akun && pegawai.Akun.profile_picture) {
+      pegawai.Akun.profile_picture = `${baseUrl}${pegawai.Akun.profile_picture}`;
+    }
+
     res.status(200).json(pegawai);
   } catch (error) {
     res.status(500).json({ error: error.message });

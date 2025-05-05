@@ -8,11 +8,17 @@ const generateId = require('../utils/generateId');
 exports.createDonasiBarang = async (req, res) => {
   try {
     const { id_request_donasi, id_owner, id_barang, tanggal_donasi } = req.body;
+
+    if (!id_request_donasi || !id_owner || !id_barang || !tanggal_donasi) {
+      return res.status(400).json({ success: false, message: 'Field tidak boleh kosong.' });
+    }
+
     const newId = await generateId({
       model: DonasiBarang,
       prefix: 'DNB',
       fieldName: 'id_donasi_barang'
     });
+
     const donasi = await DonasiBarang.create({
       id_donasi_barang: newId,
       id_request_donasi,
@@ -20,9 +26,62 @@ exports.createDonasiBarang = async (req, res) => {
       id_barang,
       tanggal_donasi,
     });
-    res.status(201).json(donasi);
+
+    res.status(201).json({
+      success: true,
+      message: 'Donasi barang berhasil dibuat.',
+      data: donasi
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Create multiple DonasiBarang entries for a given request
+ * Used when approving a request and you want to donate multiple items at once
+ */
+exports.createBulkDonasiBarang = async (req, res) => {
+  try {
+    const { id_request_donasi, id_owner, items } = req.body;
+
+    if (!id_request_donasi || !id_owner || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid request. Please provide request_id, owner_id, and an array of item IDs.' 
+      });
+    }
+
+    const donationRecords = [];
+    const tanggal_donasi = new Date(); // Use current date for all donations
+
+    // Create donation entries for each item
+    for (const id_barang of items) {
+      const newId = await generateId({
+        model: DonasiBarang,
+        prefix: 'DNB',
+        fieldName: 'id_donasi_barang'
+      });
+
+      donationRecords.push({
+        id_donasi_barang: newId,
+        id_request_donasi,
+        id_owner,
+        id_barang,
+        tanggal_donasi,
+      });
+    }
+
+    // Bulk create all donation records
+    const donations = await DonasiBarang.bulkCreate(donationRecords);
+
+    res.status(201).json({
+      success: true,
+      message: `${donations.length} barang berhasil didonasikan.`,
+      data: donations
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -69,7 +128,7 @@ exports.getDonasiBarangById = async (req, res) => {
   }
 };
 
-exports.getDonasiBarangByIdRequestDonasi = async (req, res) => {
+exports.getPenitipandBarangByIdRequestDonasi = async (req, res) => {
   try {
     const { id } = req.params; // id_request_donasi
     const donasi = await DonasiBarang.findAll({
