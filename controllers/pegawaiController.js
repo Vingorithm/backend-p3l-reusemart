@@ -160,6 +160,7 @@ exports.updatePegawai = async (req, res) => {
     console.log('Update Body:', req.body);
     console.log('Update File:', req.file);
     
+  
     // Ambil data dari request
     const { nama_pegawai, tanggal_lahir, email, role, password } = req.body;
     

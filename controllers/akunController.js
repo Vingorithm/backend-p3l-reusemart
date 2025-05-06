@@ -7,6 +7,40 @@ const path = require('path');
 const Pembeli = require('../models/pembeli');
 const OrganisasiAmal = require('../models/organisasiAmal');
 const generateId = require('../utils/generateId');
+const { sendPasswordResetEmail, sendRejectionEmail } = require('../utils/sendEmail');
+
+exports.sendResetPasswordLink = async (req, res) => {
+  const { email } = req.body;
+
+  // Cari user berdasarkan email
+  const akun = await Akun.findOne({ where: { email } });
+  if (!akun) {
+    return res.status(404).json({ message: 'Email tidak ditemukan' });
+  }
+
+  if(akun.role == 'Pembeli' || akun.role == 'Penitip' || akun.role == 'Organisasi Amal') {
+    // Buat token yang kadaluarsa dalam 1 jam
+    const token = jwt.sign({ id: akun.id_akun }, SECRET_KEY, { expiresIn: '1h' });
+  
+    // Kirim email
+    try {
+      await sendPasswordResetEmail(email, token);
+      res.status(200).json({ message: 'Email reset password telah dikirim' });
+    } catch (error) {
+      console.error('Gagal mengirim email:', error);
+      res.status(500).json({ message: 'Gagal mengirim email' });
+    }
+  } else {
+    res.status(400).json({ message: 'Role yang dimiliki tidak boleh mengakses fitur ini' });
+    // try {
+    //   await sendRejectionEmail(email);
+    // } catch (error) {
+    //   console.error('Gagal mengirim email:', error);
+    //   res.status(500).json({ message: 'Gagal mengirim email' });
+    // }
+  }
+
+};
 
 const generateNewId = async () => {
   const akunList = await Akun.findAll({
@@ -159,22 +193,37 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.resetPassword = async (req, res) => {
+exports.changePassword = async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { newPassword } = req.body;
 
-    const akun = await Akun.findOne({ where: { email } });
-    if (!akun) return res.status(404).json({ message: 'Email tidak ditemukan' });
+    const akun = await Akun.findByPk(req.params.id);
+    if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     akun.password = hashedPassword;
     await akun.save();
 
-    res.status(200).json({ message: 'Password berhasil direset' });
+    res.status(200).json({ message: 'Password berhasil diubah', akun });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getAkunByEmail = async (req, res) => {
+  try {
+    const email = req.params.email;
+    const akun = await Akun.findOne({where: {email}});
+    if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
+    res.status(200).json({ message: 'Akun berhasil ditemukan', akun });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+exports.sendVerificationEmail = async (req, res) => {
+
+}
 
 exports.getAllAkun = async (req, res) => {
   try {
