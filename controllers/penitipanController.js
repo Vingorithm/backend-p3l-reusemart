@@ -43,6 +43,7 @@ exports.createPenitipan = async (req, res) => {
 
 exports.getAllPenitipan = async (req, res) => {
   try {
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
     const penitipan = await Penitipan.findAll({
       include: [
         {
@@ -62,7 +63,18 @@ exports.getAllPenitipan = async (req, res) => {
       ],
       order: [['id_barang', 'ASC']]
     });
-    res.status(200).json(penitipan);
+    
+    // Tambahin Url pada saat return gambar
+    const penitipanWithFullImageUrl = penitipan.map(p => {
+      const barang = p.Barang;
+      if (barang && barang.gambar) {
+        const gambarList = barang.gambar.split(',').map(g => `${baseUrl}${g.trim()}`);
+        barang.gambar = gambarList.join(',');
+      }
+      return p;
+    });
+    
+    res.status(200).json(penitipanWithFullImageUrl);    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

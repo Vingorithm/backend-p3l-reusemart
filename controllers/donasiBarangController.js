@@ -37,10 +37,6 @@ exports.createDonasiBarang = async (req, res) => {
   }
 };
 
-/**
- * Create multiple DonasiBarang entries for a given request
- * Used when approving a request and you want to donate multiple items at once
- */
 exports.createBulkDonasiBarang = async (req, res) => {
   try {
     const { id_request_donasi, id_owner, items } = req.body;
@@ -53,9 +49,7 @@ exports.createBulkDonasiBarang = async (req, res) => {
     }
 
     const donationRecords = [];
-    const tanggal_donasi = new Date(); // Use current date for all donations
-
-    // Create donation entries for each item
+    const tanggal_donasi = new Date();
     for (const id_barang of items) {
       const newId = await generateId({
         model: DonasiBarang,
@@ -72,7 +66,6 @@ exports.createBulkDonasiBarang = async (req, res) => {
       });
     }
 
-    // Bulk create all donation records
     const donations = await DonasiBarang.bulkCreate(donationRecords);
 
     res.status(201).json({
