@@ -5,10 +5,12 @@ const upload = require('../middleware/upload');
 
 router.post('/register', upload.single('profile_picture'), akunController.register);
 router.post('/login', akunController.login);
-router.post('/reset-password', akunController.resetPassword);
+router.put('/change-password/:id', akunController.changePassword);
+router.post('/send-verification-email', akunController.sendResetPasswordLink);
 router.post('/', akunController.createAkun);
 router.get('/', akunController.getAllAkun);
 router.get('/:id', akunController.getAkunById);
+router.get('/byEmail/:email', akunController.getAkunByEmail);
 router.put('/:id', akunController.updateAkun);
 router.delete('/:id', akunController.deleteAkun);
 
