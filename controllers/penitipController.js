@@ -187,97 +187,63 @@ exports.getPenitipById = async (req, res) => {
 };
 
 exports.updatePenitip = async (req, res) => {
-  let t;
+  const t = await sequelize.transaction();
+  
   try {
-    t = await sequelize.transaction();
-
-    const {
-      nama_penitip,
+    const { nama_penitip, foto_ktp, nomor_ktp, keuntungan, rating, badge, total_poin, tanggal_registrasi, akun } = req.body;
+    const penitip = await Penitip.findByPk(req.params.id);
+    
+    if (!penitip) {
+      await t.rollback();
+      return res.status(404).json({ message: 'Penitip tidak ditemukan' });
+    }
+    
+    // Update penitip information
+    await penitip.update({ 
+      nama_penitip, 
+      foto_ktp, 
       nomor_ktp,
       keuntungan,
       rating,
       badge,
       total_poin,
-      tanggal_registrasi,
-      'akun[email]': email,
-    } = req.body;
-
-    console.log("Badge value received:", badge);
-    console.log("Full request body:", req.body);
-
-    if (badge !== '0' && badge !== '1') {
-      await t.rollback();
-      return res.status(400).json({ error: 'Badge harus 0 atau 1' });
+      tanggal_registrasi
+    }, { transaction: t });
+    
+    if (akun) {
+      const penitipAkun = await Akun.findByPk(penitip.id_akun);
+      
+      if (!penitipAkun) {
+        await t.rollback();
+        return res.status(404).json({ message: 'Akun penitip tidak ditemukan' });
+      }
+      
+      const updateData = {
+        email: akun.email,
+        role: akun.role
+      };
+      
+      if (akun.password) {
+        updateData.password = await bcrypt.hash(akun.password, 10);
+      }
+      
+      if (req.file) {
+        updateData.profile_picture = `/uploads/${req.file.filename}`;
+      }
+      
+      await penitipAkun.update(updateData, { transaction: t });
     }
-
-    const penitip = await Penitip.findByPk(req.params.id, { transaction: t });
-    console.log("Found penitip:", penitip);
-
-    if (!penitip) {
-      await t.rollback();
-      return res.status(404).json({ message: 'Penitip tidak ditemukan' });
-    }
-
-    const penitipUpdateData = {
-      nama_penitip,
-      nomor_ktp,
-      keuntungan: keuntungan ? Number(keuntungan) : penitip.keuntungan,
-      rating: rating ? Number(rating) : penitip.rating,
-      badge: Number(badge),
-      total_poin: total_poin ? Number(total_poin) : penitip.total_poin,
-      tanggal_registrasi,
-    };
-
-    if (req.files && req.files.foto_ktp) {
-      const ext = path.extname(req.files.foto_ktp[0].originalname);
-      const penitipIdNumber = req.params.id.replace('T', '');
-      const oldPath = req.files.foto_ktp[0].path;
-      const newPath = path.join('uploads/ktp', `ktp${penitipIdNumber}${ext}`);
-      fs.renameSync(oldPath, newPath);
-      console.log(`Renamed foto_ktp from ${oldPath} to ${newPath}`);
-      penitipUpdateData.foto_ktp = `ktp${penitipIdNumber}${ext}`;
-    }
-
-    await penitip.update(penitipUpdateData, { transaction: t });
-    console.log("Penitip updated:", penitipUpdateData);
-
-    const penitipAkun = await Akun.findByPk(penitip.id_akun, { transaction: t });
-
-    if (!penitipAkun) {
-      await t.rollback();
-      return res.status(404).json({ message: 'Akun penitip tidak ditemukan' });
-    }
-
-    const akunUpdateData = {
-      email: email || penitipAkun.email,
-    };
-
-    if (req.files && req.files.profile_picture) {
-      const ext = path.extname(req.files.profile_picture[0].originalname);
-      const akunIdNumber = penitip.id_akun.replace('A', '');
-      const oldPath = req.files.profile_picture[0].path;
-      const newPath = path.join('uploads/profile_picture', `pp${akunIdNumber}${ext}`);
-      fs.renameSync(oldPath, newPath);
-      console.log(`Renamed profile_picture from ${oldPath} to ${newPath}`);
-      akunUpdateData.profile_picture = `pp${akunIdNumber}${ext}`;
-    }
-
-    await penitipAkun.update(akunUpdateData, { transaction: t });
-    console.log("Akun updated:", akunUpdateData);
-
+    
     await t.commit();
-    console.log("Transaction committed");
-
+    
     const updatedPenitip = await Penitip.findByPk(req.params.id, {
-      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }],
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
     });
-
+    
+    console.log("Email yang diterima:", req.body['akun[email]']);
     res.status(200).json(updatedPenitip);
   } catch (error) {
-    if (t && !t.finished) {
-      await t.rollback();
-    }
-    console.error('Error updating penitip:', error);
+    await t.rollback();
     res.status(500).json({ error: error.message });
   }
 };
