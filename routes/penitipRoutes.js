@@ -44,7 +44,14 @@ router.post(
 router.get('/', penitipController.getAllPenitip);
 router.get('/:id', penitipController.getPenitipById);
 router.get('/byIdAkun/:id', penitipController.getPenitipByAkunId);
-router.put('/:id', penitipController.updatePenitip);
+router.put(
+  '/:id',
+  upload.fields([
+    { name: 'profile_picture', maxCount: 1 },
+    { name: 'foto_ktp', maxCount: 1 },
+  ]),
+  penitipController.updatePenitip
+);
 router.delete('/:id', penitipController.deletePenitip);
 
 module.exports = router;
