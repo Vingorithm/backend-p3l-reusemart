@@ -10,6 +10,9 @@ exports.createPegawai = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file);
+
     const {
       nama_pegawai,
       tanggal_lahir,
@@ -18,47 +21,61 @@ exports.createPegawai = async (req, res) => {
       role
     } = req.body;
 
-    let profilePicturePath = null;
-    let tempFilePath = null;
-    let fileExt = null;
-
-    if (req.file) {
-      tempFilePath = req.file.path;
-      fileExt = path.extname(req.file.originalname);
-    }
-
+    // Generate ID untuk akun baru
     const newAkunId = await generateId({
       model: Akun,
       prefix: 'A',
       fieldName: 'id_akun'
     });
 
+    // Enkripsi password
     const hashedPassword = await bcrypt.hash(password || 'defaultPassword', 10);
+    
+    // Default profile picture path
+    let profilePicturePath = null;
+    
+    // Buat akun baru
     const newAkun = await Akun.create({
       id_akun: newAkunId,
-      profile_picture: null,
+      profile_picture: profilePicturePath,  // akan diupdate jika ada file
       email,
       password: hashedPassword,
       role
     }, { transaction: t });
 
+    // Generate ID untuk pegawai baru
     const newPegawaiId = await generateId({
       model: Pegawai,
       prefix: 'P',
       fieldName: 'id_pegawai'
     });
 
-    if (tempFilePath) {
+    // Jika ada file yang diupload
+    if (req.file) {
+      const fileExt = path.extname(req.file.originalname);
       const newFilename = `pegawai_${newPegawaiId}${fileExt}`;
-      const newPath = path.join('uploads', newFilename);
-
-      fs.renameSync(tempFilePath, newPath);
+      
+      // Buat direktori uploads jika belum ada
+      const uploadDir = path.join(__dirname, '..', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const finalPath = path.join(uploadDir, newFilename);
+      
+      // Pindahkan file upload ke direktori final
+      fs.renameSync(req.file.path, finalPath);
+      
+      // Set path untuk disimpan di database (relatif ke root project)
       profilePicturePath = `/uploads/${newFilename}`;
+      
+      // Update akun dengan path gambar
       await newAkun.update({
         profile_picture: profilePicturePath
       }, { transaction: t });
     }
 
+    // Buat pegawai baru
     const pegawai = await Pegawai.create({
       id_pegawai: newPegawaiId,
       id_akun: newAkunId,
@@ -68,13 +85,21 @@ exports.createPegawai = async (req, res) => {
 
     await t.commit();
 
+    // Format hasil untuk response
     const result = {
       ...pegawai.dataValues,
       akun: {
         ...newAkun.dataValues,
-        password: undefined
+        password: undefined // Hapus password dari response
       }
     };
+    
+    // Tambahkan base URL ke profile picture jika ada
+    if (result.akun.profile_picture) {
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      result.akun.profile_picture = `${baseUrl}${result.akun.profile_picture}`;
+    }
+    
     res.status(201).json(result);
   } catch (error) {
     await t.rollback();
@@ -83,7 +108,6 @@ exports.createPegawai = async (req, res) => {
   }
 };
 
-
 exports.getAllPegawai = async (req, res) => {
   try {
     const pegawai = await Pegawai.findAll({
@@ -91,10 +115,13 @@ exports.getAllPegawai = async (req, res) => {
       order: [['id_pegawai', 'ASC']]
     });
 
-    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
+    // Add base URL to profile pictures
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     pegawai.forEach(p => {
       if (p.Akun && p.Akun.profile_picture) {
-        p.Akun.profile_picture = `${baseUrl}${p.Akun.profile_picture}`;
+        if (!p.Akun.profile_picture.startsWith('http')) {
+          p.Akun.profile_picture = `${baseUrl}${p.Akun.profile_picture}`;
+        }
       }
     });
 
@@ -112,9 +139,12 @@ exports.getPegawaiById = async (req, res) => {
 
     if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
 
-    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
+    // Add base URL to profile picture
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
     if (pegawai.Akun && pegawai.Akun.profile_picture) {
-      pegawai.Akun.profile_picture = `${baseUrl}${pegawai.Akun.profile_picture}`;
+      if (!pegawai.Akun.profile_picture.startsWith('http')) {
+        pegawai.Akun.profile_picture = `${baseUrl}${pegawai.Akun.profile_picture}`;
+      }
     }
 
     res.status(200).json(pegawai);
@@ -127,7 +157,13 @@ exports.updatePegawai = async (req, res) => {
   const t = await sequelize.transaction();
   
   try {
-    const { nama_pegawai, tanggal_lahir } = req.body;
+    console.log('Update Body:', req.body);
+    console.log('Update File:', req.file);
+    
+    // Ambil data dari request
+    const { nama_pegawai, tanggal_lahir, email, role, password } = req.body;
+    
+    // Cari pegawai berdasarkan ID
     const pegawai = await Pegawai.findByPk(req.params.id);
     
     if (!pegawai) {
@@ -141,41 +177,75 @@ exports.updatePegawai = async (req, res) => {
       tanggal_lahir 
     }, { transaction: t });
 
-    const akun = req.body.Akun;
+    // Cari akun pegawai
+    const pegawaiAkun = await Akun.findByPk(pegawai.id_akun);
     
-    if (akun) {
-      const pegawaiAkun = await Akun.findByPk(pegawai.id_akun);
-      
-      if (!pegawaiAkun) {
-        await t.rollback();
-        return res.status(404).json({ message: 'Akun pegawai tidak ditemukan' });
-      }
-      
-      const updateData = {
-        email: akun.email,
-        role: akun.role
-      };
-      
-      if (akun.password) {
-        updateData.password = await bcrypt.hash(akun.password, 10);
-      }
-      
-      if (req.file) {
-        updateData.profile_picture = `/uploads/${req.file.filename}`;
-      }
-      
-      await pegawaiAkun.update(updateData, { transaction: t });
+    if (!pegawaiAkun) {
+      await t.rollback();
+      return res.status(404).json({ message: 'Akun pegawai tidak ditemukan' });
     }
+    
+    // Data untuk update akun
+    const updateData = {
+      email: email || pegawaiAkun.email,
+      role: role || pegawaiAkun.role
+    };
+    
+    // Jika password di-reset
+    if (password) {
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+    
+    // Jika ada file yang diupload
+    if (req.file) {
+      const fileExt = path.extname(req.file.originalname);
+      const newFilename = `pegawai_${pegawai.id_pegawai}${fileExt}`;
+      
+      // Buat direktori uploads jika belum ada
+      const uploadDir = path.join(__dirname, '..', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const finalPath = path.join(uploadDir, newFilename);
+      
+      // Hapus file lama jika ada
+      if (pegawaiAkun.profile_picture) {
+        const oldFilePath = path.join(__dirname, '..', pegawaiAkun.profile_picture);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      
+      // Pindahkan file upload ke direktori final
+      fs.renameSync(req.file.path, finalPath);
+      
+      // Set path untuk disimpan di database
+      updateData.profile_picture = `/uploads/${newFilename}`;
+    }
+    
+    // Update akun
+    await pegawaiAkun.update(updateData, { transaction: t });
     
     await t.commit();
     
+    // Ambil data pegawai yang sudah diupdate
     const updatedPegawai = await Pegawai.findByPk(req.params.id, {
       include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
     });
     
+    // Add base URL to profile picture
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    if (updatedPegawai.Akun && updatedPegawai.Akun.profile_picture) {
+      if (!updatedPegawai.Akun.profile_picture.startsWith('http')) {
+        updatedPegawai.Akun.profile_picture = `${baseUrl}${updatedPegawai.Akun.profile_picture}`;
+      }
+    }
+    
     res.status(200).json(updatedPegawai);
   } catch (error) {
     await t.rollback();
+    console.error('Error updating pegawai:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -186,10 +256,13 @@ exports.deletePegawai = async (req, res) => {
   try {
     const pegawai = await Pegawai.findByPk(req.params.id);
     if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
+    
     const akunId = pegawai.id_akun;
     const akun = await Akun.findByPk(akunId);
+    
+    // Hapus file profile picture jika ada
     if (akun && akun.profile_picture) {
-      const profilePicturePath = path.join(__dirname, '..', 'uploads', akun.profile_picture.replace('/uploads/', ''));
+      const profilePicturePath = path.join(__dirname, '..', akun.profile_picture);
       if (fs.existsSync(profilePicturePath)) {
         fs.unlinkSync(profilePicturePath);
       }
@@ -219,6 +292,14 @@ exports.getAkunByPegawaiId = async (req, res) => {
     });
     
     if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
+    
+    // Add base URL to profile picture
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    if (akun.profile_picture) {
+      if (!akun.profile_picture.startsWith('http')) {
+        akun.profile_picture = `${baseUrl}${akun.profile_picture}`;
+      }
+    }
     
     res.status(200).json(akun);
   } catch (error) {
