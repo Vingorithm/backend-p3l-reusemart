@@ -127,7 +127,7 @@ exports.updatePegawai = async (req, res) => {
   const t = await sequelize.transaction();
   
   try {
-    const { nama_pegawai, tanggal_lahir, akun } = req.body;
+    const { nama_pegawai, tanggal_lahir } = req.body;
     const pegawai = await Pegawai.findByPk(req.params.id);
     
     if (!pegawai) {
@@ -140,6 +140,8 @@ exports.updatePegawai = async (req, res) => {
       nama_pegawai, 
       tanggal_lahir 
     }, { transaction: t });
+
+    const akun = req.body.Akun;
     
     if (akun) {
       const pegawaiAkun = await Akun.findByPk(pegawai.id_akun);
