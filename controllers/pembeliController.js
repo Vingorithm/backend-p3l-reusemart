@@ -206,10 +206,17 @@ exports.getAkunByPembeliId = async (req, res) => {
 
 exports.getPembeliByAkunId = async (req, res) => {
   try {
-    const pembeli = await Pembeli.findOne({ where: { id_akun: req.params.id } });
+    const pembeli = await Pembeli.findOne({
+      where: { id_akun: req.params.id },
+      include: [{
+        model: Akun,
+        attributes: ['id_akun', 'email', 'role', 'profile_picture']
+      }]
+    });
+
     if (!pembeli) return res.status(404).json({ message: 'Pembeli tidak ditemukan' });
-    
-    res.status(200).json({message: "Data berhasil ditemukan!", pembeli});
+
+    res.status(200).json({ message: "Data berhasil ditemukan!", pembeli });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
