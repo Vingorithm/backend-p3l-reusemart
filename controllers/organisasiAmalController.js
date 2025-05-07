@@ -199,3 +199,26 @@ exports.getAkunByOrganisasiId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getOrganisasiAmalByAkun = async (req, res) => {
+  try {
+    const organisasi = await OrganisasiAmal.findOne({
+      where: { id_akun: req.params.id },
+      include: [
+        {
+          model: Akun,
+          attributes: ['id_akun', 'email', 'profile_picture'],
+        },
+      ],
+    });
+
+    if (!organisasi) {
+      return res.status(404).json({ message: 'Organisasi tidak ditemukan untuk akun ini' });
+    }
+
+    res.status(200).json(organisasi);
+  } catch (error) {
+    console.error('Error in getOrganisasiAmalByAkun:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
