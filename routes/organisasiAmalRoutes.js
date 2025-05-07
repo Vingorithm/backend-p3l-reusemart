@@ -27,5 +27,6 @@ router.get('/', organisasiAmalController.getAllOrganisasiAmal);
 router.get('/:id', organisasiAmalController.getOrganisasiAmalById);
 router.put('/:id', upload.single('profile_picture'), organisasiAmalController.updateOrganisasiAmal);
 router.delete('/:id', organisasiAmalController.deleteOrganisasiAmal);
+router.get('/byIdAkun/:id', organisasiAmalController.getOrganisasiAmalByAkun);
 
 module.exports = router;

@@ -113,3 +113,35 @@ exports.deleteRequestDonasi = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getRequestDonasiByIdOrganisasi = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const requestDonasi = await RequestDonasi.findAll({
+      where: { id_organisasi: id },
+      include: [
+        {
+          model: Organisasi,
+          attributes: ['id_organisasi', 'nama_organisasi', 'alamat'],
+          include: [
+            {
+              model: Akun,
+              attributes: ['id_akun', 'email', 'profile_picture']
+            }
+          ]
+        }
+      ],
+      order: [['tanggal_request', 'DESC']]
+    });
+
+    if (requestDonasi.length === 0) {
+      return res.status(404).json({ message: 'Tidak ada request donasi untuk organisasi ini' });
+    }
+
+    res.status(200).json(requestDonasi);
+  } catch (error) {
+    console.error('Error in getRequestDonasiByIdOrganisasi:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
