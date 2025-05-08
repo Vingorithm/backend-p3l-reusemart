@@ -32,30 +32,26 @@ exports.createPegawai = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password || 'defaultPassword', 10);
     
     // Default profile picture path
-    let profilePicturePath = null;
-    
-    // Buat akun baru
+    let profilePicturePath = 'default.jpg';
+
     const newAkun = await Akun.create({
       id_akun: newAkunId,
-      profile_picture: profilePicturePath,  // akan diupdate jika ada file
+      profile_picture: profilePicturePath,
       email,
       password: hashedPassword,
       role
     }, { transaction: t });
 
-    // Generate ID untuk pegawai baru
     const newPegawaiId = await generateId({
       model: Pegawai,
       prefix: 'P',
       fieldName: 'id_pegawai'
     });
 
-    // Jika ada file yang diupload
     if (req.file) {
       const fileExt = path.extname(req.file.originalname);
       const newFilename = `pegawai_${newPegawaiId}${fileExt}`;
       
-      // Buat direktori uploads jika belum ada
       const uploadDir = path.join(__dirname, '..', 'uploads');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
@@ -63,19 +59,15 @@ exports.createPegawai = async (req, res) => {
       
       const finalPath = path.join(uploadDir, newFilename);
       
-      // Pindahkan file upload ke direktori final
       fs.renameSync(req.file.path, finalPath);
       
-      // Set path untuk disimpan di database (relatif ke root project)
       profilePicturePath = `/uploads/${newFilename}`;
-      
-      // Update akun dengan path gambar
+
       await newAkun.update({
         profile_picture: profilePicturePath
       }, { transaction: t });
     }
 
-    // Buat pegawai baru
     const pegawai = await Pegawai.create({
       id_pegawai: newPegawaiId,
       id_akun: newAkunId,
@@ -85,7 +77,6 @@ exports.createPegawai = async (req, res) => {
 
     await t.commit();
 
-    // Format hasil untuk response
     const result = {
       ...pegawai.dataValues,
       akun: {
@@ -94,7 +85,6 @@ exports.createPegawai = async (req, res) => {
       }
     };
     
-    // Tambahkan base URL ke profile picture jika ada
     if (result.akun.profile_picture) {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       result.akun.profile_picture = `${baseUrl}${result.akun.profile_picture}`;
