@@ -17,7 +17,7 @@ const generateId = require('../utils/generateId');
 
 exports.createPembelian = async (req, res) => {
   try {
-    const { id_barang, id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
+    const { id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
     const newId = await generateId({
       model: Pembelian,
       prefix: 'PBLN',
@@ -25,7 +25,6 @@ exports.createPembelian = async (req, res) => {
     });
     const pembelian = await Pembelian.create({
       id_pembelian: newId,
-      id_barang,
       id_customer_service,
       id_pembeli,
       id_alamat,
@@ -47,7 +46,9 @@ exports.createPembelian = async (req, res) => {
 
 exports.getAllPembelian = async (req, res) => {
   try {
-    const pembelian = await Pembelian.findAll();
+    const pembelian = await Pembelian.findAll({
+      
+    });
     res.status(200).json(pembelian);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -66,10 +67,10 @@ exports.getPembelianById = async (req, res) => {
 
 exports.updatePembelian = async (req, res) => {
   try {
-    const { id_barang, id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
+    const { id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
     const pembelian = await Pembelian.findByPk(req.params.id);
     if (!pembelian) return res.status(404).json({ message: 'Pembelian tidak ditemukan' });
-    await pembelian.update({ id_barang, id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian });
+    await pembelian.update({ id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian });
     res.status(200).json(pembelian);
   } catch (error) {
     res.status(500).json({ error: error.message });

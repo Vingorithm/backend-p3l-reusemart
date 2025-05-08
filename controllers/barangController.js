@@ -15,7 +15,7 @@ const generateNewId = async (namaBarang) => {
     where: {
       id_barang: {
         [Op.like]: `${hurufDepan}%`
-      }
+      } 
     }
   });
 

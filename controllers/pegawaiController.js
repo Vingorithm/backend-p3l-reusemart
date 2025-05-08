@@ -81,7 +81,7 @@ exports.createPegawai = async (req, res) => {
       ...pegawai.dataValues,
       akun: {
         ...newAkun.dataValues,
-        password: undefined // Hapus password dari response
+        password: undefined
       }
     };
     
