@@ -16,7 +16,21 @@ const Pengiriman = sequelize.define('Pengiriman', {
   timestamps: false,
 });
 
-Pengiriman.belongsTo(Pembelian, { foreignKey: 'id_pembelian', onDelete: 'CASCADE' });
-Pengiriman.belongsTo(Pegawai, { foreignKey: 'id_pengkonfirmasi', onDelete: 'RESTRICT' });
+Pengiriman.belongsTo(Pembelian, {
+  foreignKey: 'id_pembelian',
+  targetKey: 'id_pembelian',
+  onDelete: 'CASCADE'
+});
+
+Pembelian.hasOne(Pengiriman, {
+  foreignKey: 'id_pembelian',
+  sourceKey: 'id_pembelian',
+  onDelete: 'CASCADE'
+});
+
+Pengiriman.belongsTo(Pegawai, {
+  foreignKey: 'id_pengkonfirmasi',
+  onDelete: 'RESTRICT'
+});
 
 module.exports = Pengiriman;
