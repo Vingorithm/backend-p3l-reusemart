@@ -2,6 +2,7 @@ const Barang = require('../models/barang');
 const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
+const Penitip = require('../models/penitip');
 
 const generateNewId = async (namaBarang) => {
   if (!namaBarang || namaBarang.length === 0) {
@@ -90,7 +91,12 @@ exports.createBarang = async (req, res) => {
 
 exports.getAllBarang = async (req, res) => {
   try {
-    const barang = await Barang.findAll();
+    const barang = await Barang.findAll({
+      include: [{
+        model: Penitip,
+        attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge']
+      }]
+    });
 
     const baseUrl = 'http://localhost:3000/uploads/barang/';
     barang.forEach(b => {
@@ -99,7 +105,7 @@ exports.getAllBarang = async (req, res) => {
         b.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
       }
     });
-    
+
     res.status(200).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -108,10 +114,16 @@ exports.getAllBarang = async (req, res) => {
 
 exports.getBarangById = async (req, res) => {
   try {
-    const barang = await Barang.findByPk(req.params.id);
+    const barang = await Barang.findByPk(req.params.id, {
+      include: [{
+        model: Penitip,
+        attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge']
+      }]
+    });
+
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = 'http://localhost:3000/uploads/barang/'; 
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
     if (barang.gambar) {
       const imageArray = barang.gambar.split(',').map(img => img.trim());
       barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
