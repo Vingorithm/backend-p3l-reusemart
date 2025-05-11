@@ -10,5 +10,6 @@ router.get('/:id', subPembelianController.getSubPembelianById);
 router.put('/:id', subPembelianController.updateSubPembelian);
 router.delete('/:id', subPembelianController.deleteSubPembelian);
 router.get('/by-pembelian/:id', subPembelianController.getSubPembelianByIdPembelian);
+//router.get('/sub-pembelian/by-pembeli/:id_pembeli', subPembelianController.getSubPembelianByPembeliId);
 
 module.exports = router;

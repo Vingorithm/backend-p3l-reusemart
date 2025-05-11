@@ -87,3 +87,20 @@ exports.deletePembelian = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPembelianByPembeliId = async (req, res) => {
+  try {
+    const { id_pembeli } = req.params; 
+    const pembelian = await Pembelian.findAll({
+      where: {
+        id_pembeli: id_pembeli
+      }
+    });
+    if (!pembelian || pembelian.length === 0) {
+      return res.status(404).json({ message: 'Tidak ada pembelian ditemukan untuk pembeli ini' });
+    }
+    res.status(200).json(pembelian);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
