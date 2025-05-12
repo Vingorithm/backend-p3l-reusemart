@@ -46,7 +46,7 @@ exports.getAllTransaksi = async (req, res) => {
           ]
         },
       ],
-      order: [['id_pembelian', 'ASC']]
+      order: [['id_sub_pembelian', 'ASC']]
     });
     res.status(200).json(transaksi);
   } catch (error) {
