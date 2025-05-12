@@ -28,10 +28,7 @@ exports.createPegawai = async (req, res) => {
       fieldName: 'id_akun'
     });
 
-    // Enkripsi password
     const hashedPassword = await bcrypt.hash(password || 'defaultPassword', 10);
-    
-    // Default profile picture path
     let profilePicturePath = 'default.jpg';
 
     const newAkun = await Akun.create({

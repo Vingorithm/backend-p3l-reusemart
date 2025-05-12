@@ -48,10 +48,17 @@ exports.createBarang = async (req, res) => {
       kategori_barang
     } = req.body;
 
+    // Konversi id_hunter kosong ke null
+    const hunterId = id_hunter === '' || id_hunter === undefined ? null : id_hunter;
+
+    // Validasi jumlah gambar
+    if (req.files && req.files.length > 2) {
+      return res.status(400).json({ error: 'Maksimal 2 gambar yang dapat diunggah.' });
+    }
+
     const newId = await generateNewId(nama);
 
     let imageFilenames = [];
-
     if (req.files && req.files.length > 0) {
       for (let i = 0; i < req.files.length; i++) {
         const file = req.files[i];
@@ -70,7 +77,7 @@ exports.createBarang = async (req, res) => {
     const barang = await Barang.create({
       id_barang: newId,
       id_penitip,
-      id_hunter,
+      id_hunter: hunterId,
       id_pegawai_gudang,
       nama,
       deskripsi,
@@ -85,6 +92,7 @@ exports.createBarang = async (req, res) => {
 
     res.status(201).json(barang);
   } catch (error) {
+    console.error('Error in createBarang:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -106,6 +114,7 @@ exports.getAllBarang = async (req, res) => {
       }
     });
 
+    console.log('Data barang yang dikembalikan:', barang);
     res.status(200).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -123,7 +132,7 @@ exports.getBarangById = async (req, res) => {
 
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000/uploads/barang/';
     if (barang.gambar) {
       const imageArray = barang.gambar.split(',').map(img => img.trim());
       barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
@@ -137,10 +146,72 @@ exports.getBarangById = async (req, res) => {
 
 exports.updateBarang = async (req, res) => {
   try {
-    const { id_penitip, id_hunter, id_pegawai_gudang, nama, deskripsi, gambar, harga, garansi_berlaku, tanggal_garansi, berat, status_qc, kategori_barang } = req.body;
+    const {
+      id_penitip,
+      id_hunter,
+      id_pegawai_gudang,
+      nama,
+      deskripsi,
+      harga,
+      garansi_berlaku,
+      tanggal_garansi,
+      berat,
+      status_qc,
+      kategori_barang
+    } = req.body;
+
+    // Konversi id_hunter kosong ke null
+    const hunterId = id_hunter === '' || id_hunter === undefined ? null : id_hunter;
+
     const barang = await Barang.findByPk(req.params.id);
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
-    await barang.update({ id_penitip, id_hunter, id_pegawai_gudang, nama, deskripsi, gambar, harga, garansi_berlaku, tanggal_garansi, berat, status_qc, kategori_barang });
+
+    if (req.files && req.files.length > 2) {
+      return res.status(400).json({ error: 'Maksimal 2 gambar yang dapat diunggah.' });
+    }
+
+    let imageFilenames = barang.gambar ? barang.gambar.split(',') : [];
+    if (req.files && req.files.length > 0) {
+      if (imageFilenames.length > 0) {
+        imageFilenames.forEach(filename => {
+          const filePath = path.join(__dirname, '../uploads/barang', filename);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        });
+      }
+
+      // Proses gambar baru
+      imageFilenames = [];
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const fileExtension = path.extname(file.originalname);
+        const newFilename = `${barang.id_barang}_${i + 1}${fileExtension}`;
+        const oldPath = path.join(file.destination, file.filename);
+        const newPath = path.join(file.destination, newFilename);
+
+        fs.renameSync(oldPath, newPath);
+        imageFilenames.push(newFilename);
+      }
+    }
+
+    const gambar = imageFilenames.length > 0 ? imageFilenames.join(',') : null;
+
+    await barang.update({
+      id_penitip,
+      id_hunter: hunterId,
+      id_pegawai_gudang,
+      nama,
+      deskripsi,
+      gambar,
+      harga,
+      garansi_berlaku,
+      tanggal_garansi,
+      berat,
+      status_qc,
+      kategori_barang
+    });
+
     res.status(200).json(barang);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -151,6 +222,18 @@ exports.deleteBarang = async (req, res) => {
   try {
     const barang = await Barang.findByPk(req.params.id);
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
+
+    // Hapus gambar dari sistem file jika ada
+    if (barang.gambar) {
+      const imageFilenames = barang.gambar.split(',').map(filename => filename.trim());
+      imageFilenames.forEach(filename => {
+        const filePath = path.join(__dirname, '../uploads/barang', filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      });
+    }
+
     await barang.destroy();
     res.status(204).json();
   } catch (error) {
