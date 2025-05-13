@@ -48,10 +48,7 @@ exports.createBarang = async (req, res) => {
       kategori_barang
     } = req.body;
 
-    // Konversi id_hunter kosong ke null
-    const hunterId = id_hunter === '' || id_hunter === undefined ? null : id_hunter;
-
-    // Validasi jumlah gambar
+    const hunterId = id_hunter === 'null' || id_hunter === '' || id_hunter === undefined ? null : id_hunter;
     if (req.files && req.files.length > 2) {
       return res.status(400).json({ error: 'Maksimal 2 gambar yang dapat diunggah.' });
     }
@@ -65,8 +62,12 @@ exports.createBarang = async (req, res) => {
         const fileExtension = path.extname(file.originalname);
         const newFilename = `${newId}_${i + 1}${fileExtension}`;
         const oldPath = path.join(file.destination, file.filename);
-        const newPath = path.join(file.destination, newFilename);
+        const barangDir = path.join(file.destination, 'barang');
 
+        if (!fs.existsSync(barangDir)) {
+          fs.mkdirSync(barangDir, { recursive: true });
+        }
+        const newPath = path.join(barangDir, newFilename);
         fs.renameSync(oldPath, newPath);
         imageFilenames.push(newFilename);
       }
