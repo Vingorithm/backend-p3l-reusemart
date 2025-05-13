@@ -90,10 +90,9 @@ exports.deletePembelian = async (req, res) => {
 
 exports.getPembelianByPembeliId = async (req, res) => {
   try {
-    const { id_pembeli } = req.params; 
     const pembelian = await Pembelian.findAll({
       where: {
-        id_pembeli: id_pembeli
+        id_pembeli: req.params.id
       }
     });
     if (!pembelian || pembelian.length === 0) {

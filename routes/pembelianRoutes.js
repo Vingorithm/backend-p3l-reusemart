@@ -9,6 +9,6 @@ router.get('/', pembelianController.getAllPembelian);
 router.get('/:id', pembelianController.getPembelianById);
 router.put('/:id', pembelianController.updatePembelian);
 router.delete('/:id', pembelianController.deletePembelian);
-router.get('/pembeli/:id_pembeli', pembelianController.getPembelianByPembeliId);
+router.get('/byIdPembeli/:id', pembelianController.getPembelianByPembeliId);
 
 module.exports = router;

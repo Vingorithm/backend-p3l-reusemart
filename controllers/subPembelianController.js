@@ -146,11 +146,9 @@ exports.deleteSubPembelian = async (req, res) => {
 };
 
 exports.getSubPembelianByIdPembelian = async (req, res) => {
-  const { id } = req.params;
-
   try {
     const subPembelian = await SubPembelian.findAll({
-      where: { id_pembelian: id },
+      where: { id_pembelian: req.params.id },
       include: [
         {
           model: Pembelian,
@@ -341,69 +339,116 @@ exports.getSubPembelianByPenitipId = async (req, res) => {
   }
 };
 
-// exports.getSubPembelianByPembeliId = async (req, res) => {
-//   try {
-//     const { id_pembeli } = req.params;
+exports.getSubPembelianByPembeliId = async (req, res) => {
+  try {
+    const id_pembeli = req.params.id;
+    const pembelianRecords = await Pembelian.findAll({
+      where: { id_pembeli },
+      attributes: [
+        'id_pembelian', 'id_customer_service', 'id_pembeli', 'id_alamat',
+        'bukti_transfer', 'tanggal_pembelian', 'tanggal_pelunasan',
+        'total_harga', 'ongkir', 'potongan_poin', 'total_bayar',
+        'poin_diperoleh', 'status_pembelian'
+      ],
+      include: [
+        {
+          model: Pengiriman,
+          attributes: [
+            'id_pengiriman', 'id_pembelian', 'id_pengkonfirmasi',
+            'tanggal_mulai', 'tanggal_berakhir',
+            'status_pengiriman', 'jenis_pengiriman'
+          ],
+          required: false
+        }
+      ],
+      order: [['tanggal_pembelian', 'DESC']]
+    });
 
-//     // Fetch Pembelian records for the given id_pembeli, including related SubPembelian and Pengiriman
-//     const pembelianRecords = await Pembelian.findAll({
-//       where: { id_pembeli },
-//       include: [
-//         {
-//           model: Pengiriman, // Include Pengiriman through Pembelian
-//           required: false, // Left join to include Pembelian even if Pengiriman is null
-//         },
-//         {
-//           model: SubPembelian,
-//           include: [
-//             {
-//               model: Barang, // Include Barang through SubPembelian
-//               required: true, // Inner join to ensure we only get SubPembelian with Barang
-//             },
-//           ],
-//         },
-//       ],
-//     });
+    if (!pembelianRecords || pembelianRecords.length === 0) {
+      return res.status(404).json({ message: 'Tidak ada pembelian ditemukan untuk pembeli ini' });
+    }
 
-//     if (!pembelianRecords || pembelianRecords.length === 0) {
-//       return res.status(404).json({ message: 'Tidak ada pembelian ditemukan untuk pembeli ini' });
-//     }
+    const pembelianIds = pembelianRecords.map(p => p.id_pembelian);
+    const subPembelianRecords = await SubPembelian.findAll({
+      where: {
+        id_pembelian: pembelianIds
+      },
+      include: [
+        {
+          model: Barang,
+          attributes: [
+            'id_barang', 'id_penitip', 'id_hunter', 'id_pegawai_gudang',
+            'nama', 'deskripsi', 'gambar', 'harga',
+            'garansi_berlaku', 'tanggal_garansi', 'berat',
+            'status_qc', 'kategori_barang'
+          ]
+        }
+      ]
+    });
 
-//     // Format the response to match the desired structure
-//     const response = pembelianRecords.map(pembelian => ({
-//       id_pembelian: pembelian.id_pembelian,
-//       id_customer_service: pembelian.id_customer_service,
-//       id_pembeli: pembelian.id_pembeli,
-//       id_alamat: pembelian.id_alamat,
-//       bukti_transfer: pembelian.bukti_transfer,
-//       tanggal_pembelian: pembelian.tanggal_pembelian,
-//       tanggal_pelunasan: pembelian.tanggal_pelunasan,
-//       total_harga: pembelian.total_harga,
-//       ongkir: pembelian.ongkir,
-//       potongan_poin: pembelian.potongan_poin,
-//       total_bayar: pembelian.total_bayar,
-//       poin_diperoleh: pembelian.poin_diperoleh,
-//       status_pembelian: pembelian.status_pembelian,
-//       pengiriman: pembelian.Pengiriman || null, // Handle case where Pengiriman might be null
-//       barang: pembelian.SubPembelians.map(sub => ({
-//         id_barang: sub.Barang.id_barang,
-//         id_penitip: sub.Barang.id_penitip,
-//         id_hunter: sub.Barang.id_hunter,
-//         id_pegawai_gudang: sub.Barang.id_pegawai_gudang,
-//         nama: sub.Barang.nama,
-//         deskripsi: sub.Barang.deskripsi,
-//         gambar: sub.Barang.gambar,
-//         harga: sub.Barang.harga,
-//         garansi_berlaku: sub.Barang.garansi_berlaku,
-//         tanggal_garansi: sub.Barang.tanggal_garansi,
-//         berat: sub.Barang.berat,
-//         status_qc: sub.Barang.status_qc,
-//         kategori_barang: sub.Barang.kategori_barang,
-//       })),
-//     }));
+    const subPembelianIds = subPembelianRecords.map(sp => sp.id_sub_pembelian);
+    const transaksiRecords = await Transaksi.findAll({
+      where: {
+        id_sub_pembelian: subPembelianIds
+      },
+      attributes: [
+        "id_transaksi",
+        "id_sub_pembelian",
+        "komisi_reusemart",
+        "komisi_hunter",
+        "pendapatan",
+        "bonus_cepat",
+      ]
+    });
 
-//     res.status(200).json(response);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+    const transaksiBySubPembelianId = transaksiRecords.reduce((acc, trx) => {
+      acc[trx.id_sub_pembelian] = {
+        id_transaksi: trx.id_transaksi,
+        id_sub_pembelian: trx.id_sub_pembelian,
+        komisi_reusemart: trx.komisi_reusemart,
+        komisi_hunter: trx.komisi_hunter,
+        pendapatan: trx.pendapatan,
+        bonus_cepat: trx.bonus_cepat,
+      };
+      return acc;
+    }, {});
+
+    const subPembelianByPembelianId = subPembelianRecords.reduce((acc, subPembelian) => {
+      const pembelianId = subPembelian.id_pembelian;
+      if (!acc[pembelianId]) {
+        acc[pembelianId] = [];
+      }
+      
+      const barangData = subPembelian.Barang.toJSON();
+      
+      const transaksi = transaksiBySubPembelianId[subPembelian.id_sub_pembelian] || null;
+      if (transaksi) {
+        barangData.transaksi = transaksi;
+      }
+      
+      acc[pembelianId].push({
+        id_sub_pembelian: subPembelian.id_sub_pembelian,
+        barang: barangData
+      });
+      
+      return acc;
+    }, {});
+
+    const response = pembelianRecords.map(pembelian => {
+      const pembelianData = pembelian.toJSON();
+      const pengiriman = pembelianData.Pengiriman;
+      delete pembelianData.Pengiriman;
+      
+      return {
+        pembelian: pembelianData,
+        pengiriman: pengiriman || null,
+        barang: subPembelianByPembelianId[pembelianData.id_pembelian]?.map(item => item.barang) || []
+      };
+    });
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error('Error in getSubPembelianByPembeliId:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
