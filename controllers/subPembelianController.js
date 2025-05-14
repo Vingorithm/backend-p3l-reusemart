@@ -5,6 +5,8 @@ const Pembelian = require('../models/pembelian');
 const Barang = require('../models/barang');
 const Pengiriman = require('../models/pengiriman');
 const Transaksi = require('../models/transaksi');
+const AlamatPembeli = require('../models/alamatPembeli');
+const Pembeli = require('../models/pembeli');
 
 exports.createSubPembelian = async (req, res) => {
   try {
@@ -226,6 +228,12 @@ exports.getSubPembelianByPenitipId = async (req, res) => {
                 'tanggal_mulai', 'tanggal_berakhir',
                 'status_pengiriman', 'jenis_pengiriman'
               ]
+            },
+            { 
+              model: Pembeli,
+            },
+            {
+              model: AlamatPembeli,
             }
           ]
         },
