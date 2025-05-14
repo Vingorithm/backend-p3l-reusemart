@@ -247,12 +247,30 @@ exports.getAkunById = async (req, res) => {
 exports.updateAkun = async (req, res) => {
   try {
     const { email, password, role } = req.body;
+
     const akun = await Akun.findByPk(req.params.id);
     if (!akun) return res.status(404).json({ message: 'Akun tidak ditemukan' });
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : akun.password;
-    const profile_picture = req.file ? req.file.filename : akun.profile_picture;
-    await akun.update({ profile_picture, email, password: hashedPassword, role });
+
+    let profile_picture = akun.profile_picture;
+    if (req.file) {
+      const ext = path.extname(req.file.originalname);
+      const newFilename = `pp${akun.id_akun.replace(/\D/g, '')}${ext}`;
+      const newPath = path.join('uploads/profile_picture', newFilename);
+      const oldPath = req.file.path;
+
+      // Rename file
+      fs.renameSync(oldPath, newPath);
+      profile_picture = newFilename;
+    }
+
+    await akun.update({
+      email: email ?? akun.email,
+      password: hashedPassword,
+      role: role ?? akun.role,
+      profile_picture
+    });
     res.status(200).json(akun);
   } catch (error) {
     res.status(500).json({ error: error.message });
