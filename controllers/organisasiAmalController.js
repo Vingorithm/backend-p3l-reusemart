@@ -131,7 +131,7 @@ exports.updateOrganisasiAmal = async (req, res) => {
     if (akun) {
       if (req.file) {
         const ext = path.extname(req.file.originalname);
-        const newFileName = `pp${akun.id_akun}${ext}`;
+        const newFileName = `pp${akun.id_akun.replace(/\D/g, '')}${ext}`;
         const newPath = path.join(__dirname, '../uploads/profile_picture', newFileName);
   
         // Rename file
