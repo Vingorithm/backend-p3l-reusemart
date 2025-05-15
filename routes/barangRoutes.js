@@ -6,6 +6,7 @@ const upload = require('../middleware/upload');
 
 router.post('/',upload.array('gambar', 2), barangController.createBarang);
 router.get('/', barangController.getAllBarang);
+router.get('/garansi/', barangController.getAllBarangGaransi);
 router.get('/:id', barangController.getBarangById);
 router.put('/:id', barangController.updateBarang);
 router.delete('/:id', barangController.deleteBarang);

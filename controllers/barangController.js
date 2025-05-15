@@ -241,3 +241,32 @@ exports.deleteBarang = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getAllBarangGaransi = async (req, res) => {
+  try {
+    const barang = await Barang.findAll({
+      where: {
+        tanggal_garansi: {
+          [Op.not]: null
+        }
+      },
+      include: [{
+        model: Penitip,
+        attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge']
+      }]
+    });
+
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    barang.forEach(b => {
+      if (b.gambar) {
+        const imageArray = b.gambar.split(',').map(img => img.trim());
+        b.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
+      }
+    });
+
+    console.log('Data barang yang dikembalikan:', barang);
+    res.status(200).json(barang);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
