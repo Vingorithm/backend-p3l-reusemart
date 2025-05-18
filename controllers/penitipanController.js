@@ -1,22 +1,8 @@
-const { v4: uuidv4 } = require('uuid');
 const Penitipan = require('../models/penitipan');
 const Barang = require('../models/barang');
 const Penitip = require('../models/penitip');
 const Akun = require('../models/akun');
 const generateId = require('../utils/generateId');
-
-// const generateNewId = async () => {
-//   const last = await Penitipan.findOne({
-//     order: [['id_penitipan', 'DESC']]
-//   });
-
-//   if (!last || !/^PTP\d+$/.test(last.id_penitipan)) return 'PTP1';
-
-//   const lastId = last.id_penitipan;
-//   const numericPart = parseInt(lastId.slice(3));
-//   const newNumericPart = numericPart + 1;
-//   return `PTP${newNumericPart}`;
-// };
 
 exports.createPenitipan = async (req, res) => {
   try {
@@ -107,6 +93,50 @@ exports.getPenitipanById = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPenitipanByIdBarang = async (req, res) => {
+  try {
+    const { id_barang } = req.params;
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
+
+    const penitipan = await Penitipan.findOne({
+      where: { id_barang },
+      include: [
+        {
+          model: Barang,
+          attributes: [
+            'id_barang', 'id_penitip', 'id_hunter', 'id_pegawai_gudang',
+            'nama', 'gambar', 'harga', 'garansi_berlaku', 'tanggal_garansi',
+            'berat', 'status_qc', 'kategori_barang'
+          ],
+          include: [
+            {
+              model: Penitip,
+              attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            }
+          ]
+        }
+      ]
+    });
+
+    if (!penitipan) return res.status(404).json({ message: 'Penitipan untuk id_barang ini tidak ditemukan' });
+
+    const barang = penitipan.Barang;
+    if (barang && barang.gambar) {
+      const gambarList = barang.gambar.split(',').map(g => `${baseUrl}${g.trim()}`);
+      barang.gambar = gambarList.join(',');
+    }
+
+    res.status(200).json(penitipan);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 exports.updatePenitipan = async (req, res) => {
   try {

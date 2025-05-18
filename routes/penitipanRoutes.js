@@ -7,6 +7,7 @@ const upload = multer();
 router.post('/', upload.none(), penitipanController.createPenitipan);
 router.get('/', penitipanController.getAllPenitipan);
 router.get('/:id', penitipanController.getPenitipanById);
+router.get('/byIdBarang/:id_barang', penitipanController.getPenitipanByIdBarang);
 router.put('/:id', penitipanController.updatePenitipan);
 router.delete('/:id', penitipanController.deletePenitipan);
 
