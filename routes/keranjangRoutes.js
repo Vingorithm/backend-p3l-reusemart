@@ -8,7 +8,8 @@ const roleCheck = require('../middleware/roleCheck');
 
 router.post('/', upload.none(), keranjangController.createKeranjang);
 router.get('/', keranjangController.getAllKeranjang);
-router.get('/:id', auth, roleCheck(['pembeli']), keranjangController.getKeranjangById);
+router.get('/:id', keranjangController.getKeranjangById);
+router.get('/byIdPembeli/:id', keranjangController.getKeranjangByIdPembeli);
 router.put('/:id', keranjangController.updateKeranjang);
 router.delete('/:id', keranjangController.deleteKeranjang);
 
