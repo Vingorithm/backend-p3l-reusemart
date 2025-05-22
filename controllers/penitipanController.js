@@ -160,3 +160,53 @@ exports.deletePenitipan = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPenitipanByIdPenitip = async (req, res) => {
+  try {
+    const { id } = req.params; // Pakai id, bukan id_penitip
+    console.log('Requested ID Penitip:', id); // Log ID
+    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    
+    const penitipan = await Penitipan.findAll({
+      where: {
+        '$Barang.Penitip.id_penitip$': id
+      },
+      include: [
+        {
+          model: Barang,
+          attributes: ['id_barang', 'id_penitip', 'id_hunter', 'id_pegawai_gudang', 'nama', 'gambar', 'harga', 'garansi_berlaku', 'tanggal_garansi', 'berat', 'status_qc', 'kategori_barang'],
+          include: [
+            {
+              model: Penitip,
+              attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            }
+          ]
+        }
+      ],
+      order: [['id_barang', 'ASC']]
+    });
+
+    console.log('Penitipan Found:', penitipan.length, 'records'); // Log jumlah data
+    if (!penitipan.length) {
+      return res.status(404).json({ message: `Penitipan tidak ditemukan untuk id_penitip: ${id}` });
+    }
+
+    const penitipanWithFullImageUrl = penitipan.map(p => {
+      const barang = p.Barang;
+      if (barang && barang.gambar) {
+        const gambarList = barang.gambar.split(',').map(g => `${baseUrl}${g.trim()}`);
+        barang.gambar = gambarList.join(',');
+      }
+      return p;
+    });
+
+    res.status(200).json(penitipanWithFullImageUrl);
+  } catch (error) {
+    console.error('Error in getPenitipanByIdPenitip:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
