@@ -1,6 +1,9 @@
 const { v4: uuidv4 } = require('uuid');
 const Keranjang = require('../models/keranjang');
 const generateId = require('../utils/generateId');
+const Barang = require('../models/barang');
+const Penitipan = require('../models/penitipan');
+const Penitip = require('../models/penitip');
 
 exports.createKeranjang = async (req, res) => {
   try {
@@ -33,6 +36,30 @@ exports.getAllKeranjang = async (req, res) => {
 exports.getKeranjangById = async (req, res) => {
   try {
     const keranjang = await Keranjang.findByPk(req.params.id);
+    if (!keranjang) return res.status(404).json({ message: 'Keranjang tidak ditemukan' });
+    res.status(200).json(keranjang);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getKeranjangByIdPembeli = async (req, res) => {
+  try {
+    const keranjang = await Keranjang.findAll({ where: { 'id_pembeli': req.params.id},
+      include: [
+        {
+          model: Barang,
+          include: [
+            {
+              model: Penitipan,
+            },
+            {
+              model: Penitip
+            }
+          ],
+        },
+      ],
+    });
     if (!keranjang) return res.status(404).json({ message: 'Keranjang tidak ditemukan' });
     res.status(200).json(keranjang);
   } catch (error) {

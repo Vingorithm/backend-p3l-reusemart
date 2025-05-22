@@ -4,6 +4,8 @@ const routes = require('./routes');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
+const { initModels } = require('./models/initModels');
+initModels();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
