@@ -23,6 +23,10 @@ const Akun = sequelize.define('Akun', {
     type: DataTypes.STRING(255),
     allowNull: false,
   },
+  fcm_token: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
 }, {
   tableName: 'Akun',
   timestamps: false,

@@ -18,14 +18,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// FCM Token routes
+router.post('/fcm-token', akunController.updateFcmToken);
+router.get('/fcm-token/:id_akun', akunController.getFcmToken);
+router.delete('/fcm-token', akunController.removeFcmToken);
+
 router.post('/register', akunController.register);
 router.post('/login', akunController.login);
-router.put('/change-password/:id', akunController.changePassword);
 router.post('/send-verification-email', akunController.sendResetPasswordLink);
 router.post('/', akunController.createAkun);
 router.get('/', akunController.getAllAkun);
 router.get('/:id', akunController.getAkunById);
 router.get('/byEmail/:email', akunController.getAkunByEmail);
+router.put('/change-password/:id', akunController.changePassword);
 router.put('/:id', upload.single('profile_picture'), akunController.updateAkun);
 router.delete('/:id', akunController.deleteAkun);
 

@@ -162,7 +162,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Ini logika tokennya masih belum di setting
+// FIXED: Konsistensi struktur response
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -179,16 +179,160 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
     
+    // FIXED: Gunakan id_akun yang konsisten dengan Flutter
     res.status(200).json({
       message: 'Login berhasil',
       token,
       akun: {
-        id: akun.id_akun,
+        id_akun: akun.id_akun,  // CHANGED: dari 'id' ke 'id_akun'
         email: akun.email,
         role: akun.role
       }
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// IMPROVED: Better FCM token handling dengan logging yang lebih baik
+exports.updateFcmToken = async (req, res) => {
+  try {
+    const { id_akun, fcm_token } = req.body;
+    
+    console.log('=== FCM TOKEN UPDATE REQUEST ===');
+    console.log('User ID:', id_akun);
+    console.log('FCM Token Length:', fcm_token ? fcm_token.length : 0);
+    console.log('FCM Token (first 50 chars):', fcm_token ? fcm_token.substring(0, 50) + '...' : 'null');
+
+    if (!id_akun || !fcm_token) {
+      console.log('Validation failed: Missing id_akun or fcm_token');
+      return res.status(400).json({ 
+        message: 'id_akun dan fcm_token wajib diisi',
+        received: { id_akun: !!id_akun, fcm_token: !!fcm_token }
+      });
+    }
+
+    if (typeof fcm_token !== 'string' || fcm_token.length < 50) {
+      console.log('FCM Token validation failed:', { 
+        type: typeof fcm_token, 
+        length: fcm_token.length 
+      });
+      return res.status(400).json({ 
+        message: 'Format FCM token tidak valid',
+        details: 'FCM token harus berupa string dengan minimal 50 karakter'
+      });
+    }
+
+    const akun = await Akun.findByPk(id_akun);
+    if (!akun) {
+      console.log('User not found:', id_akun);
+      return res.status(404).json({ 
+        message: 'Akun tidak ditemukan',
+        id_akun: id_akun
+      });
+    }
+
+    const oldToken = akun.fcm_token;
+    await akun.update({ 
+      fcm_token: fcm_token,
+      updated_at: new Date()
+    });
+
+    console.log('FCM token updated successfully');
+    console.log('User:', akun.email);
+    console.log('Role:', akun.role);
+    console.log('Token changed:', oldToken !== fcm_token);
+    console.log('=================================');
+    
+    res.status(200).json({ 
+      message: 'FCM token berhasil diperbarui',
+      data: {
+        id_akun: akun.id_akun,
+        email: akun.email,
+        role: akun.role,
+        fcm_token_updated: true,
+        updated_at: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error updating FCM token:', error);
+    res.status(500).json({ 
+      message: 'Gagal memperbarui FCM token',
+      error: error.message 
+    });
+  }
+};
+
+exports.getFcmToken = async (req, res) => {
+  try {
+    const { id_akun } = req.params;
+
+    const akun = await Akun.findByPk(id_akun, {
+      attributes: ['id_akun', 'email', 'role', 'fcm_token', 'updated_at']
+    });
+
+    if (!akun) {
+      return res.status(404).json({ message: 'Akun tidak ditemukan' });
+    }
+
+    res.status(200).json({
+      message: 'FCM token ditemukan',
+      data: {
+        id_akun: akun.id_akun,
+        email: akun.email,
+        role: akun.role,
+        has_fcm_token: !!akun.fcm_token,
+        fcm_token_length: akun.fcm_token ? akun.fcm_token.length : 0,
+        token_updated_at: akun.updated_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.removeFcmToken = async (req, res) => {
+  try {
+    const { id_akun } = req.body;
+
+    console.log('=== FCM TOKEN REMOVAL REQUEST ===');
+    console.log('User ID:', id_akun);
+
+    if (!id_akun) {
+      return res.status(400).json({ message: 'id_akun wajib diisi' });
+    }
+
+    const akun = await Akun.findByPk(id_akun);
+    if (!akun) {
+      console.log('User not found for token removal:', id_akun);
+      return res.status(404).json({ message: 'Akun tidak ditemukan' });
+    }
+
+    const hadToken = !!akun.fcm_token;
+    await akun.update({ 
+      fcm_token: null,
+      updated_at: new Date()
+    });
+
+    console.log('FCM token removed successfully');
+    console.log('User:', akun.email);
+    console.log('Had token before removal:', hadToken);
+    console.log('==================================');
+
+    res.status(200).json({ 
+      message: 'FCM token berhasil dihapus',
+      data: { 
+        id_akun: akun.id_akun,
+        email: akun.email,
+        had_token_before: hadToken
+      }
+    });
+
+  } catch (error) {
+    console.error('Error removing FCM token:', error);
     res.status(500).json({ error: error.message });
   }
 };
