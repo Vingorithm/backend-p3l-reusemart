@@ -335,7 +335,8 @@ exports.getItemForScheduling = async (req, res) => {
 exports.schedulePickup = async (req, res) => {
   try {
     console.log('Schedule Pickup Request Body:', req.body);
-    const { id_pengiriman, tanggal_mulai, tanggal_berakhir } = req.body;
+    const id_pengiriman = req.params.id;
+    const { tanggal_mulai, tanggal_berakhir } = req.body;
     if (!id_pengiriman || !tanggal_mulai || !tanggal_berakhir) {
       return res.status(400).json({ message: 'id_pengiriman, tanggal_mulai, and tanggal_berakhir are required' });
     }
