@@ -12,7 +12,7 @@ router.put('/:id', penitipanController.updatePenitipan);
 router.delete('/:id', penitipanController.deletePenitipan);
 router.get('/byIdPenitip/:id', penitipanController.getPenitipanByIdPenitip);
 router.get('/item-for-scheduling/:id', penitipanController.getItemForScheduling);
-router.put('/schedule-pickup', penitipanController.schedulePickup);
+router.put('/schedule-pickup/:id', penitipanController.schedulePickup);
 router.patch('/confirm-receipt/:id_pengiriman', penitipanController.confirmReceipt);
 
 module.exports = router;
