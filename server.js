@@ -6,6 +6,8 @@ const cors = require('cors');
 require('dotenv').config();
 const { initModels } = require('./models/initModels');
 initModels();
+const PenitipanScheduler = require('./utils/penitipanScheduler');
+PenitipanScheduler.init();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
