@@ -6,7 +6,7 @@ const AlamatPembeli = require('./alamatPembeli');
 
 const Pembelian = sequelize.define('Pembelian', {
   id_pembelian: { type: DataTypes.STRING(50), primaryKey: true },
-  id_customer_service: { type: DataTypes.STRING(50), allowNull: false },
+  id_customer_service: { type: DataTypes.STRING(50), allowNull: true },
   id_pembeli: { type: DataTypes.STRING(50), allowNull: false },
   id_alamat: { type: DataTypes.STRING(50), allowNull: false },
   bukti_transfer: { type: DataTypes.STRING(255), allowNull: false },

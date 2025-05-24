@@ -6,7 +6,7 @@ const Pegawai = require('./pegawai');
 const Pengiriman = sequelize.define('Pengiriman', {
   id_pengiriman: { type: DataTypes.STRING(50), primaryKey: true },
   id_pembelian: { type: DataTypes.STRING(50), allowNull: false },
-  id_pengkonfirmasi: { type: DataTypes.STRING(50), allowNull: false },
+  id_pengkonfirmasi: { type: DataTypes.STRING(50), allowNull: true },
   tanggal_mulai: { type: DataTypes.DATE, allowNull: false },
   tanggal_berakhir: { type: DataTypes.DATE, allowNull: true },
   status_pengiriman: { type: DataTypes.STRING(20), allowNull: false },
