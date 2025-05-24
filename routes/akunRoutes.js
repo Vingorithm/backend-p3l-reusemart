@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const akunController = require('../controllers/akunController');
 // const upload = require('../middleware/upload');
-
 const multer = require('multer');
 const path = require('path');
+const Akun = require('../models/akun');
+const { sendPushNotification } = require('../utils/notification');
 
 // Konfigurasi multer
 const storage = multer.diskStorage({
@@ -17,6 +18,31 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+
+
+// Tambahkan route untuk testing
+router.post('/test-notification', async (req, res) => {
+  try {
+    const { id_akun } = req.body;
+    console.log(req.body);
+    
+    const akun = await Akun.findByPk(id_akun);
+    if (!akun || !akun.fcm_token) {
+      return res.status(404).json({ message: 'User atau FCM token tidak ditemukan' });
+    }
+
+    await sendPushNotification(
+      akun.fcm_token,
+      "🧪 Test Notification",
+      "Push notification berhasil! Sistem notifikasi berfungsi dengan baik.",
+      { type: 'test', timestamp: new Date().toISOString() }
+    );
+
+    res.json({ message: 'Test notification sent successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // FCM Token routes
 router.post('/fcm-token', akunController.updateFcmToken);
