@@ -10,4 +10,5 @@ router.get('/:id', pengirimanController.getPengirimanById);
 router.put('/:id', pengirimanController.updatePengiriman);
 router.delete('/:id', pengirimanController.deletePengiriman);
 
+
 module.exports = router;

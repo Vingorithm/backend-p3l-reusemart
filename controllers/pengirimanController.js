@@ -79,3 +79,22 @@ exports.deletePengiriman = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updatePengiriman = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status_pengiriman, tanggal_mulai, tanggal_berakhir } = req.body;
+
+    const pengiriman = await Pengiriman.findByPk(id);
+    if (!pengiriman) {
+      return res.status(404).json({ message: 'Pengiriman not found' });
+    }
+
+    await pengiriman.update({ status_pengiriman, tanggal_mulai, tanggal_berakhir });
+
+    res.status(200).json({ message: 'Pengiriman updated successfully' });
+  } catch (error) {
+    console.error('Error in updatePengiriman:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
