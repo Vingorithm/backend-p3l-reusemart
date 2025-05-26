@@ -145,6 +145,36 @@ exports.getBarangById = async (req, res) => {
   }
 };
 
+// Helper function untuk format data barang
+const formatBarangData = (barang, baseUrl) => {
+  const formattedBarang = {
+    id_barang: barang.id_barang,
+    id_penitip: barang.id_penitip,
+    id_hunter: barang.id_hunter,
+    id_pegawai_gudang: barang.id_pegawai_gudang,
+    nama: barang.nama || '',
+    deskripsi: barang.deskripsi || '',
+    gambar: '',
+    harga: parseFloat(barang.harga) || 0.0,
+    garansi_berlaku: Boolean(barang.garansi_berlaku),
+    tanggal_garansi: barang.tanggal_garansi,
+    berat: parseFloat(barang.berat) || 0.0,
+    status_qc: barang.status_qc || '',
+    kategori_barang: barang.kategori_barang || '',
+    Penitip: barang.Penitip || null,
+    Hunter: barang.Hunter || null,
+    PegawaiGudang: barang.PegawaiGudang || null
+  };
+
+  // Handle gambar URLs
+  if (barang.gambar) {
+    const imageArray = barang.gambar.split(',').map(img => img.trim());
+    formattedBarang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
+  }
+
+  return formattedBarang;
+};
+
 exports.getAllBarangMobile = async (req, res) => {
   try {
     const barang = await Barang.findAll({
@@ -155,16 +185,14 @@ exports.getAllBarangMobile = async (req, res) => {
     });
 
     const baseUrl = 'http://10.0.2.2:3000/uploads/barang/';
-    barang.forEach(b => {
-      if (b.gambar) {
-        const imageArray = b.gambar.split(',').map(img => img.trim());
-        b.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
-      }
-    });
+    
+    // Format setiap data barang untuk memastikan konsistensi
+    const formattedBarang = barang.map(b => formatBarangData(b, baseUrl));
 
-    console.log('Data barang yang dikembalikan:', barang);
-    res.status(200).json(barang);
+    console.log('Data barang yang dikembalikan:', JSON.stringify(formattedBarang, null, 2));
+    res.status(200).json(formattedBarang);
   } catch (error) {
+    console.error('Error in getAllBarangMobile:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -180,14 +208,13 @@ exports.getBarangByIdMobile = async (req, res) => {
 
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000/uploads/barang/';
-    if (barang.gambar) {
-      const imageArray = barang.gambar.split(',').map(img => img.trim());
-      barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
-    }
+    const baseUrl = 'http://10.0.2.2:3000/uploads/barang/';
+    const formattedBarang = formatBarangData(barang, baseUrl);
 
-    res.status(200).json(barang);
+    console.log('Data barang by ID yang dikembalikan:', JSON.stringify(formattedBarang, null, 2));
+    res.status(200).json(formattedBarang);
   } catch (error) {
+    console.error('Error in getBarangByIdMobile:', error);
     res.status(500).json({ error: error.message });
   }
 };
