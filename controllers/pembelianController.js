@@ -1,6 +1,13 @@
 const { v4: uuidv4 } = require('uuid');
 const Pembelian = require('../models/pembelian');
 const generateId = require('../utils/generateId');
+const AlamatPembeli = require('../models/alamatPembeli');
+const Pembeli = require('../models/pembeli');
+const Pengiriman = require('../models/pengiriman');
+const SubPembelian = require('../models/subPembelian');
+const Pegawai = require('../models/pegawai');
+const Barang = require('../models/barang');
+const Akun = require('../models/akun');
 
 // const generateNewId = async () => {
 //   const last = await Pembelian.findOne({
@@ -57,13 +64,62 @@ exports.getAllPembelian = async (req, res) => {
 
 exports.getPembelianById = async (req, res) => {
   try {
-    const pembelian = await Pembelian.findByPk(req.params.id);
+    const pembelian = await Pembelian.findByPk(req.params.id, {
+      include: [
+        { model: AlamatPembeli },
+        { 
+          model: Pembeli,
+          include: [
+            {
+              model: Akun,
+              attributes: ['email']
+            }
+          ]
+         },
+        { model: Pengiriman,
+          include: [
+            {
+              model: Pegawai,
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['role']
+                }
+              ]
+            }
+          ],
+        },
+        {
+          model: SubPembelian,
+          include: [
+            {
+              model: Barang,
+              include: [
+                {
+                  model: Pegawai,
+                  as: 'PegawaiGudang',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role']
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+
     if (!pembelian) return res.status(404).json({ message: 'Pembelian tidak ditemukan' });
+
     res.status(200).json(pembelian);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 exports.updatePembelian = async (req, res) => {
   try {
