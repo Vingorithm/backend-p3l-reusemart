@@ -8,6 +8,8 @@ const SubPembelian = require('../models/subPembelian');
 const Pegawai = require('../models/pegawai');
 const Barang = require('../models/barang');
 const Akun = require('../models/akun');
+const path = require('path');
+const fs = require('fs');
 
 // const generateNewId = async () => {
 //   const last = await Pembelian.findOne({
@@ -122,13 +124,64 @@ exports.getPembelianById = async (req, res) => {
 
 
 exports.updatePembelian = async (req, res) => {
-  try {
-    const { id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian } = req.body;
-    const pembelian = await Pembelian.findByPk(req.params.id);
+   try {
+    const {
+      id_customer_service,
+      id_pembeli,
+      id_alamat,
+      tanggal_pembelian,
+      tanggal_pelunasan,
+      total_harga,
+      ongkir,
+      potongan_poin,
+      total_bayar,
+      poin_diperoleh,
+      status_pembelian,
+    } = req.body;
+
+    const id = req.params.id;
+    const numericId = id.match(/\d+/)?.[0] || '0';
+
+    // Ambil pembelian berdasarkan ID
+    const pembelian = await Pembelian.findByPk(id);
     if (!pembelian) return res.status(404).json({ message: 'Pembelian tidak ditemukan' });
-    await pembelian.update({ id_customer_service, id_pembeli, id_alamat, bukti_transfer, tanggal_pembelian, tanggal_pelunasan, total_harga, ongkir, potongan_poin, total_bayar, poin_diperoleh, status_pembelian });
+
+    const updateData = {
+      id_customer_service,
+      id_pembeli,
+      id_alamat,
+      tanggal_pembelian,
+      tanggal_pelunasan,
+      total_harga,
+      ongkir,
+      potongan_poin,
+      total_bayar,
+      poin_diperoleh,
+      status_pembelian
+    };
+
+    if (req.file) {
+      const ext = path.extname(req.file.originalname);
+      const newFilename = `tf${numericId}${ext}`;
+      const uploadDir = path.join(__dirname, '..', 'uploads', 'bukti_bayar');
+      const destPath = path.join(uploadDir, newFilename);
+
+      if (pembelian.bukti_transfer) {
+        const oldPath = path.join(uploadDir, pembelian.bukti_transfer);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
+      }
+
+      updateData.bukti_transfer = newFilename;
+    }
+
+    // Update data pembelian
+    await pembelian.update(updateData);
+
     res.status(200).json(pembelian);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
