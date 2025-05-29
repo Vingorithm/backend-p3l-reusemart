@@ -9,7 +9,7 @@ const Penitip = sequelize.define('Penitip', {
   foto_ktp: { type: DataTypes.STRING(255), allowNull: false },
   nomor_ktp: { type: DataTypes.STRING(16), allowNull: false, unique: true },
   keuntungan: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0.00 },
-  rating: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  rating: { type: DataTypes.DECIMAL(2, 1), allowNull: false, defaultValue: 0.0 },
   badge: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: 0 },
   total_poin: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   tanggal_registrasi: { type: DataTypes.DATE, allowNull: false },
