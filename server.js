@@ -5,7 +5,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 const { initModels } = require('./models/initModels');
+const checkPembayaran = require("./jobs/checkPembayaran");
+
 initModels();
+setInterval(checkPembayaran, 1000);
 const PenitipanScheduler = require('./utils/penitipanScheduler');
 PenitipanScheduler.init();
 

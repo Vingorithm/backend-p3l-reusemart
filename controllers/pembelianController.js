@@ -122,7 +122,6 @@ exports.getPembelianById = async (req, res) => {
   }
 };
 
-
 exports.updatePembelian = async (req, res) => {
    try {
     const {
