@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { Op } = require('sequelize');
 const Penitip = require('../models/penitip');
+const Penitipan = require('../models/penitipan');
 
 const generateNewId = async (namaBarang) => {
   if (!namaBarang || namaBarang.length === 0) {
@@ -125,10 +126,15 @@ exports.getAllBarang = async (req, res) => {
 exports.getBarangById = async (req, res) => {
   try {
     const barang = await Barang.findByPk(req.params.id, {
-      include: [{
-        model: Penitip,
-        attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge']
-      }]
+      include: [
+        {
+          model: Penitip,
+          attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge']
+        },
+        {
+          model: Penitipan
+        }
+    ]
     });
 
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
@@ -155,10 +161,10 @@ const formatBarangData = (barang, baseUrl) => {
     nama: barang.nama || '',
     deskripsi: barang.deskripsi || '',
     gambar: '',
-    harga: parseFloat(barang.harga) || 0.0,
+    harga: barang.harga != null ? parseFloat(barang.harga) : 0.0,
     garansi_berlaku: Boolean(barang.garansi_berlaku),
     tanggal_garansi: barang.tanggal_garansi,
-    berat: parseFloat(barang.berat) || 0.0,
+    berat: barang.berat != null ? parseFloat(barang.berat) : 0.0,
     status_qc: barang.status_qc || '',
     kategori_barang: barang.kategori_barang || '',
     Penitip: barang.Penitip || null,
