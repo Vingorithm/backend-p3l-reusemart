@@ -17,13 +17,13 @@ const Pembelian = sequelize.define('Pembelian', {
   potongan_poin: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   total_bayar: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
   poin_diperoleh: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-  status_pembelian: { type: DataTypes.STRING(20), allowNull: false },
+  status_pembelian: { type: DataTypes.STRING(255), allowNull: false },
 }, {
   tableName: 'Pembelian',
   timestamps: false,
 });
 
-Pembelian.belongsTo(Pegawai, { foreignKey: 'id_customer_service', onDelete: 'RESTRICT' });
+Pembelian.belongsTo(Pegawai, { as: 'CustomerService', foreignKey: 'id_customer_service', onDelete: 'RESTRICT' });
 Pembelian.belongsTo(Pembeli, { foreignKey: 'id_pembeli', onDelete: 'RESTRICT' });
 Pembelian.belongsTo(AlamatPembeli, { foreignKey: 'id_alamat', onDelete: 'RESTRICT' });
 

@@ -9,6 +9,7 @@ function initModels() {
     Barang.hasOne(Penitipan, { foreignKey: 'id_barang' });
 
     Pembelian.hasMany(SubPembelian, { foreignKey: 'id_pembelian' });
+    Pembelian.hasOne(Pegawai, { foreignKey: 'id_customer_service'});
 }
 
 module.exports = {initModels }
