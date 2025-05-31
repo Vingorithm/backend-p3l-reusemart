@@ -56,7 +56,71 @@ exports.createPembelian = async (req, res) => {
 exports.getAllPembelian = async (req, res) => {
   try {
     const pembelian = await Pembelian.findAll({
-      
+      include: [
+        {
+          model: Pegawai,
+          as: 'CustomerService',
+          include: [
+            {
+              model: Akun,
+              attributes: ['role']
+            }
+          ]
+        },
+        { model: AlamatPembeli },
+        { 
+          model: Pembeli,
+          include: [
+            {
+              model: Akun,
+              attributes: ['email']
+            }
+          ]
+         },
+        { model: Pengiriman,
+          include: [
+            {
+              model: Pegawai,
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['role']
+                }
+              ]
+            }
+          ],
+        },
+        {
+          model: SubPembelian,
+          include: [
+            {
+              model: Barang,
+              include: [
+                {
+                  model: Pegawai,
+                  as: 'PegawaiGudang',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role']
+                    }
+                  ]
+                },
+                {
+                  model: Pegawai,
+                  as: 'Hunter',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role']
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
     });
     res.status(200).json(pembelian);
   } catch (error) {

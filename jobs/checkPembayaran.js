@@ -49,7 +49,7 @@ const checkPembayaran = async () => {
       });
 
       const pembeli = await Pembeli.findByPk(pembelian?.Pembeli?.id_pembeli);
-      if(pembeli) await pembeli.update({ total_poin: ( pembeli?.total_poin - pembelian?.poin_diperoleh + ((pembelian?.potongan_poin/10000) * 100) )});
+      if(pembeli) await pembeli.update({ total_poin: ( pembeli?.total_poin + ((pembelian?.potongan_poin/10000) * 100) )});
       
       const pengiriman = await Pengiriman.findByPk(pembelian?.Pengiriman?.id_pengiriman);
       if(pengiriman) await pengiriman.update({ status_pengiriman: "Tidak diproses"});
