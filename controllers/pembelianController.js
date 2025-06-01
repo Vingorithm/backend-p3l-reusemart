@@ -10,6 +10,7 @@ const Barang = require('../models/barang');
 const Akun = require('../models/akun');
 const path = require('path');
 const fs = require('fs');
+const Penitipan = require('../models/penitipan');
 
 // const generateNewId = async () => {
 //   const last = await Pembelian.findOne({
@@ -63,7 +64,7 @@ exports.getAllPembelian = async (req, res) => {
           include: [
             {
               model: Akun,
-              attributes: ['role']
+              attributes: ['role', 'fcm_token']
             }
           ]
         },
@@ -73,7 +74,7 @@ exports.getAllPembelian = async (req, res) => {
           include: [
             {
               model: Akun,
-              attributes: ['email']
+              attributes: ['email', 'role', 'fcm_token']
             }
           ]
          },
@@ -84,7 +85,7 @@ exports.getAllPembelian = async (req, res) => {
               include: [
                 {
                   model: Akun,
-                  attributes: ['role']
+                  attributes: ['role', 'fcm_token']
                 }
               ]
             }
@@ -102,7 +103,7 @@ exports.getAllPembelian = async (req, res) => {
                   include: [
                     {
                       model: Akun,
-                      attributes: ['role']
+                      attributes: ['role', 'fcm_token']
                     }
                   ]
                 },
@@ -112,9 +113,12 @@ exports.getAllPembelian = async (req, res) => {
                   include: [
                     {
                       model: Akun,
-                      attributes: ['role']
+                      attributes: ['role', 'fcm_token']
                     }
                   ]
+                },
+                {
+                  model: Penitipan
                 }
               ]
             }

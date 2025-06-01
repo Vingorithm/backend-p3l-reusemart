@@ -11,7 +11,7 @@ const ClaimMerchandise = sequelize.define('ClaimMerchandise', {
   id_customer_service: { type: DataTypes.STRING(50), allowNull: false },
   tanggal_claim: { type: DataTypes.DATE, allowNull: false },
   tanggal_ambil: { type: DataTypes.DATE, allowNull: true },
-  status_claim_merchandise: { type: DataTypes.STRING(20), allowNull: false },
+  status_claim_merchandise: { type: DataTypes.STRING(255), allowNull: false },
 }, {
   tableName: 'ClaimMerchandise',
   timestamps: false,
