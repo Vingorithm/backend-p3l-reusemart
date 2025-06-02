@@ -21,5 +21,6 @@ router.use('/donasi-barang', require('./donasiBarangRoutes'));
 router.use('/penitipan', require('./penitipanRoutes'));
 router.use('/bonus-top-seller', require('./bonusTopSellerRoutes'));
 router.use('/sub-pembelian', require('./subPembelianRoutes'));
+router.use('/notification', require('./notificationRoutes'));
 
 module.exports = router;
