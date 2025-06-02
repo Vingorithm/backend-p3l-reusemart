@@ -11,6 +11,7 @@ const Akun = require('../models/akun');
 const path = require('path');
 const fs = require('fs');
 const Penitipan = require('../models/penitipan');
+const Penitip = require('../models/penitip');
 
 // const generateNewId = async () => {
 //   const last = await Pembelian.findOne({
@@ -110,6 +111,15 @@ exports.getAllPembelian = async (req, res) => {
                 {
                   model: Pegawai,
                   as: 'Hunter',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role', 'fcm_token']
+                    }
+                  ]
+                },
+                {
+                  model: Penitip,
                   include: [
                     {
                       model: Akun,
