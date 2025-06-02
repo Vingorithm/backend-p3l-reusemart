@@ -10,7 +10,7 @@ const Pengiriman = sequelize.define('Pengiriman', {
   tanggal_mulai: { type: DataTypes.DATE, allowNull: true },
   tanggal_berakhir: { type: DataTypes.DATE, allowNull: true },
   status_pengiriman: { type: DataTypes.STRING(255), allowNull: false },
-  jenis_pengiriman: { type: DataTypes.STRING(50), allowNull: false },
+  jenis_pengiriman: { type: DataTypes.STRING(255), allowNull: false },
 }, {
   tableName: 'Pengiriman',
   timestamps: false,
