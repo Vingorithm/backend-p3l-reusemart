@@ -230,7 +230,7 @@ exports.getItemForScheduling = async (req, res) => {
     const penitipan = await Penitipan.findOne({
       where: {
         id_penitipan,
-        status_penitipan: 'Terjual',
+        status_penitipan: ['Terjual', 'Menunggu diambil'],
       },
       include: [
         {
