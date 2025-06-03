@@ -60,11 +60,14 @@ exports.getPengirimanById = async (req, res) => {
 exports.updatePengiriman = async (req, res) => {
   try {
     const { id_pembelian, id_pengkonfirmasi, tanggal_mulai, tanggal_berakhir, status_pengiriman, jenis_pengiriman } = req.body;
+    console.log('Data diterima:', req.body); // Tambah log
     const pengiriman = await Pengiriman.findByPk(req.params.id);
     if (!pengiriman) return res.status(404).json({ message: 'Pengiriman tidak ditemukan' });
     await pengiriman.update({ id_pembelian, id_pengkonfirmasi, tanggal_mulai, tanggal_berakhir, status_pengiriman, jenis_pengiriman });
+    console.log('Data setelah update:', pengiriman.toJSON()); // Tambah log
     res.status(200).json(pengiriman);
   } catch (error) {
+    console.error('Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 };
@@ -80,21 +83,21 @@ exports.deletePengiriman = async (req, res) => {
   }
 };
 
-exports.updatePengiriman = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status_pengiriman, tanggal_mulai, tanggal_berakhir } = req.body;
+// exports.updatePengiriman = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { status_pengiriman, tanggal_mulai, tanggal_berakhir } = req.body;
 
-    const pengiriman = await Pengiriman.findByPk(id);
-    if (!pengiriman) {
-      return res.status(404).json({ message: 'Pengiriman not found' });
-    }
+//     const pengiriman = await Pengiriman.findByPk(id);
+//     if (!pengiriman) {
+//       return res.status(404).json({ message: 'Pengiriman not found' });
+//     }
 
-    await pengiriman.update({ status_pengiriman, tanggal_mulai, tanggal_berakhir });
+//     await pengiriman.update({ status_pengiriman, tanggal_mulai, tanggal_berakhir });
 
-    res.status(200).json({ message: 'Pengiriman updated successfully' });
-  } catch (error) {
-    console.error('Error in updatePengiriman:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
+//     res.status(200).json({ message: 'Pengiriman updated successfully' });
+//   } catch (error) {
+//     console.error('Error in updatePengiriman:', error);
+//     res.status(500).json({ error: error.message });
+//   }
+// };
