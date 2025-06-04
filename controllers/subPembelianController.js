@@ -9,6 +9,7 @@ const AlamatPembeli = require('../models/alamatPembeli');
 const Pembeli = require('../models/pembeli');
 const Pegawai = require('../models/pegawai');
 const Akun = require('../models/akun');
+const Penitip = require('../models/penitip');
 
 exports.createSubPembelian = async (req, res) => {
   try {
@@ -51,7 +52,13 @@ exports.getAllSubPembelian = async (req, res) => {
               include: [
                 {
                   model: Pegawai,
-                  attributes: ['nama_pegawai']
+                  attributes: ['nama_pegawai'],
+                  include: [
+                {
+                  model: Akun,
+                  attributes: ['email', 'fcm_token', 'role']
+                }
+              ]
                 }
               ]
             },
@@ -61,7 +68,7 @@ exports.getAllSubPembelian = async (req, res) => {
               include: [
                 {
                   model: Akun,
-                  attributes: ['email']
+                  attributes: ['email', 'fcm_token']
                 }
               ]
             },
@@ -84,6 +91,15 @@ exports.getAllSubPembelian = async (req, res) => {
               model: Pegawai,
               as: 'PegawaiGudang',
               attributes: ['nama_pegawai']
+            },
+            {
+              model: Penitip,
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['email', 'fcm_token']
+                }
+              ]
             }
           ]
         }

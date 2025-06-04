@@ -98,7 +98,7 @@ exports.getAllPembeli = async (req, res) => {
 exports.getPembeliById = async (req, res) => {
   try {
     const pembeli = await Pembeli.findByPk(req.params.id, {
-      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture', 'fcm_token'] }]
     });
     if (!pembeli) return res.status(404).json({ message: 'Pembeli tidak ditemukan' });
     res.status(200).json({message: "Data berhasil ditemukan!", pembeli});

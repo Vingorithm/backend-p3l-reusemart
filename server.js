@@ -6,10 +6,14 @@ const cors = require('cors');
 require('dotenv').config();
 const { initModels } = require('./models/initModels');
 const checkPembayaran = require("./jobs/checkPembayaran");
+const PenitipanScheduler = require('./utils/penitipanScheduler');
+const sendDeliveryNotification = require('./jobs/sendDeliveryNotification');
 
 initModels();
+
 setInterval(checkPembayaran, 1000);
-const PenitipanScheduler = require('./utils/penitipanScheduler');
+setInterval(sendDeliveryNotification, (60 * 1000));
+
 PenitipanScheduler.init();
 
 const app = express();
