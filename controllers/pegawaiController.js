@@ -121,7 +121,7 @@ exports.getAllPegawai = async (req, res) => {
 exports.getPegawaiById = async (req, res) => {
   try {
     const pegawai = await Pegawai.findByPk(req.params.id, {
-      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture', 'fcm_token'] }]
     });
 
     if (!pegawai) return res.status(404).json({ message: 'Pegawai tidak ditemukan' });
