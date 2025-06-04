@@ -7,6 +7,8 @@ const Pengiriman = require('../models/pengiriman');
 const Transaksi = require('../models/transaksi');
 const AlamatPembeli = require('../models/alamatPembeli');
 const Pembeli = require('../models/pembeli');
+const Pegawai = require('../models/pegawai');
+const Akun = require('../models/akun');
 
 exports.createSubPembelian = async (req, res) => {
   try {
@@ -44,9 +46,28 @@ exports.getAllSubPembelian = async (req, res) => {
               model: Pengiriman,
               attributes: [
                 'id_pengiriman', 'id_pembelian', 'id_pengkonfirmasi',
-                'tanggal_mulai', 'tanggal_berakhir',
-                'status_pengiriman', 'jenis_pengiriman'
+                'tanggal_mulai', 'tanggal_berakhir', 'status_pengiriman', 'jenis_pengiriman'
+              ],
+              include: [
+                {
+                  model: Pegawai,
+                  attributes: ['nama_pegawai']
+                }
               ]
+            },
+            {
+              model: Pembeli,
+              attributes: ['nama', 'total_poin'],
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['email']
+                }
+              ]
+            },
+            {
+              model: AlamatPembeli,
+              attributes: ['alamat_lengkap']
             }
           ]
         },
@@ -57,6 +78,13 @@ exports.getAllSubPembelian = async (req, res) => {
             'nama', 'deskripsi', 'gambar', 'harga',
             'garansi_berlaku', 'tanggal_garansi', 'berat',
             'status_qc', 'kategori_barang'
+          ],
+          include: [
+            {
+              model: Pegawai,
+              as: 'PegawaiGudang',
+              attributes: ['nama_pegawai']
+            }
           ]
         }
       ],
@@ -67,26 +95,43 @@ exports.getAllSubPembelian = async (req, res) => {
       return res.status(404).json({ message: 'Tidak ada sub-pembelian ditemukan' });
     }
 
-    // Group SubPembelian records by id_pembelian
     const groupedByPembelian = subPembelianRecords.reduce((acc, subPembelian) => {
       const pembelianId = subPembelian.id_pembelian;
       if (!acc[pembelianId]) {
+        const pembelian = subPembelian.Pembelian.toJSON();
+        const year = new Date(pembelian.tanggal_pembelian).getFullYear().toString().slice(-2);
+        const month = String(new Date(pembelian.tanggal_pembelian).getMonth() + 1).padStart(2, '0');
+        const notaNumber = pembelian.id_pembelian.match(/\d+$/)[0]; // Extract number from id_pembelian
         acc[pembelianId] = {
-          pembelian: subPembelian.Pembelian.toJSON(),
+          pembelian: {
+            ...pembelian,
+            no_nota: `${year}.${month}.${notaNumber}`
+          },
           barang: []
         };
-        // Add pengiriman to the pembelian object
-        acc[pembelianId].pembelian.pengiriman = subPembelian.Pembelian.Pengiriman || null;
+        acc[pembelianId].pembelian.Pembeli = pembelian.Pembeli || null;
+        acc[pembelianId].pembelian.AlamatPembeli = pembelian.AlamatPembeli || null;
+        acc[pembelianId].pembelian.pengiriman = pembelian.Pengiriman || null;
       }
-      acc[pembelianId].barang.push(subPembelian.Barang);
+      const barang = subPembelian.Barang.toJSON();
+      barang.PegawaiGudang = subPembelian.Barang.PegawaiGudang || null;
+      acc[pembelianId].barang.push(barang);
       return acc;
     }, {});
 
     const response = Object.values(groupedByPembelian).map(({ pembelian, barang }) => {
-      const { pengiriman, ...pembelianData } = pembelian; 
+      const { pengiriman, Pembeli, AlamatPembeli, ...pembelianData } = pembelian;
       return {
         ...pembelianData,
-        pengiriman,
+        pengiriman: pengiriman ? {
+          ...pengiriman,
+          Pegawai: pengiriman.Pegawai || null
+        } : null,
+        Pembeli: Pembeli ? {
+          ...Pembeli,
+          Akun: Pembeli.Akun || null
+        } : null,
+        Alamat: AlamatPembeli || null,
         barang
       };
     });
