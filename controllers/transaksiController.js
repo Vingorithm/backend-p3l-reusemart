@@ -8,6 +8,10 @@ const Barang = require('../models/barang');
 exports.createTransaksi = async (req, res) => {
   try {
     const { id_sub_pembelian, komisi_reusemart, komisi_hunter, pendapatan, bonus_cepat } = req.body;
+    console.log('Request body:', req.body); // Debug log
+    if (!id_sub_pembelian) {
+      return res.status(400).json({ error: 'id_sub_pembelian is required', data: req.body });
+    }
     const newId = await generateId({
       model: Transaksi,
       prefix: 'TRX',
@@ -17,12 +21,14 @@ exports.createTransaksi = async (req, res) => {
       id_transaksi: newId,
       id_sub_pembelian,
       komisi_reusemart,
-      komisi_hunter,
+      komisi_hunter: komisi_hunter != null ? komisi_hunter : null,
       pendapatan,
-      bonus_cepat,
+      bonus_cepat: bonus_cepat != null ? bonus_cepat : null,
     });
+    console.log('Created transaksi:', transaksi.toJSON()); // Debug log
     res.status(201).json(transaksi);
   } catch (error) {
+    console.error('Error creating transaksi:', error.message); // Debug log
     res.status(500).json({ error: error.message });
   }
 };

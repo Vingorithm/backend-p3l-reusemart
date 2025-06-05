@@ -10,6 +10,7 @@ const Pembeli = require('../models/pembeli');
 const Pegawai = require('../models/pegawai');
 const Akun = require('../models/akun');
 const Penitip = require('../models/penitip');
+const Penitipan = require('../models/penitipan');
 
 exports.createSubPembelian = async (req, res) => {
   try {
@@ -54,11 +55,11 @@ exports.getAllSubPembelian = async (req, res) => {
                   model: Pegawai,
                   attributes: ['nama_pegawai'],
                   include: [
-                {
-                  model: Akun,
-                  attributes: ['email', 'fcm_token', 'role']
-                }
-              ]
+                    {
+                      model: Akun,
+                      attributes: ['email', 'fcm_token', 'role']
+                    }
+                  ]
                 }
               ]
             },
@@ -100,6 +101,10 @@ exports.getAllSubPembelian = async (req, res) => {
                   attributes: ['email', 'fcm_token']
                 }
               ]
+            },
+            {
+              model: Penitipan,
+              attributes: ['id_penitipan', 'perpanjangan', 'tanggal_awal_penitipan']
             }
           ]
         }
@@ -117,7 +122,7 @@ exports.getAllSubPembelian = async (req, res) => {
         const pembelian = subPembelian.Pembelian.toJSON();
         const year = new Date(pembelian.tanggal_pembelian).getFullYear().toString().slice(-2);
         const month = String(new Date(pembelian.tanggal_pembelian).getMonth() + 1).padStart(2, '0');
-        const notaNumber = pembelian.id_pembelian.match(/\d+$/)[0]; // Extract number from id_pembelian
+        const notaNumber = pembelian.id_pembelian.match(/\d+$/)[0];
         acc[pembelianId] = {
           pembelian: {
             ...pembelian,
@@ -131,6 +136,8 @@ exports.getAllSubPembelian = async (req, res) => {
       }
       const barang = subPembelian.Barang.toJSON();
       barang.PegawaiGudang = subPembelian.Barang.PegawaiGudang || null;
+      barang.Penitipan = subPembelian.Barang.Penitipan || null;
+      barang.id_sub_pembelian = subPembelian.id_sub_pembelian; // Add id_sub_pembelian
       acc[pembelianId].barang.push(barang);
       return acc;
     }, {});
