@@ -9,6 +9,7 @@ const Pengiriman = require('../models/pengiriman');
 const Pembeli = require('../models/pembeli');
 const AlamatPembeli = require('../models/alamatPembeli');
 const SubPembelian = require('../models/subPembelian');
+const Pegawai = require('../models/pegawai');
 
 exports.createPenitipan = async (req, res) => {
   try {
@@ -45,6 +46,26 @@ exports.getAllPenitipan = async (req, res) => {
             {
               model: Penitip,
               attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            },
+            {
+              model: Pegawai,
+              as: 'Hunter', // Alias untuk hunter
+              attributes: ['id_pegawai', 'nama_pegawai', 'tanggal_lahir'],
+              required: false, // Left join karena bisa null
+              include: [{
+                model: Akun,
+                attributes: ['id_akun', 'email', 'profile_picture', 'role'],
+              }],
+            },
+            {
+              model: Pegawai,
+              as: 'PegawaiGudang', // Alias untuk pegawai gudang
+              attributes: ['id_pegawai', 'nama_pegawai', 'tanggal_lahir'],
+              required: false, // Left join karena bisa null
               include: [{
                 model: Akun,
                 attributes: ['id_akun', 'email', 'profile_picture', 'role'],
