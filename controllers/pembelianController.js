@@ -12,6 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const Penitipan = require('../models/penitipan');
 const Penitip = require('../models/penitip');
+const Transaksi = require('../models/transaksi');
 
 // const generateNewId = async () => {
 //   const last = await Pembelian.findOne({
@@ -131,6 +132,104 @@ exports.getAllPembelian = async (req, res) => {
                   model: Penitipan
                 }
               ]
+            },
+          ]
+        }
+      ]
+    });
+    res.status(200).json(pembelian);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPembelianByIdPenitip = async (req, res) => {
+  try {
+    const id_penitip = req.params.id;
+
+    const pembelian = await Pembelian.findAll({
+      include: [
+        {
+          model: Pegawai,
+          as: 'CustomerService',
+          include: [
+            {
+              model: Akun,
+              attributes: ['role', 'fcm_token']
+            }
+          ]
+        },
+        { model: AlamatPembeli },
+        { 
+          model: Pembeli,
+          include: [
+            {
+              model: Akun,
+              attributes: ['email', 'role', 'fcm_token']
+            }
+          ]
+         },
+        { model: Pengiriman,
+          include: [
+            {
+              model: Pegawai,
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['role', 'fcm_token']
+                }
+              ]
+            }
+          ],
+        },
+        {
+          model: SubPembelian,
+          required: true,
+          include: [
+            {
+              model: Barang,
+              required: true,
+              where: {
+                id_penitip: id_penitip 
+              },
+              include: [
+                {
+                  model: Pegawai,
+                  as: 'PegawaiGudang',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role', 'fcm_token']
+                    }
+                  ]
+                },
+                {
+                  model: Pegawai,
+                  as: 'Hunter',
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role', 'fcm_token']
+                    }
+                  ]
+                },
+                {
+                  model: Penitip,
+                  include: [
+                    {
+                      model: Akun,
+                      attributes: ['role', 'fcm_token']
+                    }
+                  ]
+                },
+                {
+                  model: Penitipan
+                }
+              ]
+            },
+            {
+              model: Transaksi,
+              required: true,
             }
           ]
         }

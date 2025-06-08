@@ -44,5 +44,6 @@ router.get('/:id', pembelianController.getPembelianById);
 router.put('/:id', upload.single('bukti_transfer'), pembelianController.updatePembelian);
 router.delete('/:id', pembelianController.deletePembelian);
 router.get('/byIdPembeli/:id', pembelianController.getPembelianByPembeliId);
+router.get('/byIdPenitip/:id', pembelianController.getPembelianByIdPenitip);
 
 module.exports = router;
