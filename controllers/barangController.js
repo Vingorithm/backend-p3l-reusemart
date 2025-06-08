@@ -226,6 +226,9 @@ exports.getBarangByIdMobile = async (req, res) => {
 };
 
 exports.updateBarang = async (req, res) => {
+  console.log('Request body:', req.body);
+  console.log('Request files:', req.files);
+
   try {
     const {
       id_penitip,
@@ -238,63 +241,169 @@ exports.updateBarang = async (req, res) => {
       tanggal_garansi,
       berat,
       status_qc,
-      kategori_barang
+      kategori_barang,
+      existing_images,
+      keep_existing_images,
     } = req.body;
 
-    // Konversi id_hunter kosong ke null
-    const hunterId = id_hunter === '' || id_hunter === undefined ? null : id_hunter;
-
     const barang = await Barang.findByPk(req.params.id);
-    if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
+    if (!barang) {
+      return res.status(404).json({ message: 'Barang tidak ditemukan' });
+    }
 
-    if (req.files && req.files.length > 2) {
+    // Validate input
+    if (nama !== undefined && (!nama || nama.trim() === '')) {
+      return res.status(400).json({ error: 'Nama barang tidak boleh kosong.' });
+    }
+    if (harga !== undefined && (isNaN(harga) || harga <= 0)) {
+      return res.status(400).json({ error: 'Harga harus berupa angka positif.' });
+    }
+    if (berat !== undefined && (isNaN(berat) || berat <= 0)) {
+      return res.status(400).json({ error: 'Berat harus berupa angka positif.' });
+    }
+
+    // Validate image count
+    const newFilesCount = req.files ? req.files.length : 0;
+    let existingImagesCount = 0;
+
+    if (keep_existing_images === 'true' && existing_images) {
+      try {
+        const existingArray = typeof existing_images === 'string' ? JSON.parse(existing_images) : existing_images;
+        existingImagesCount = Array.isArray(existingArray) ? existingArray.length : 0;
+      } catch (err) {
+        console.error('Error parsing existing_images:', err);
+      }
+    }
+
+    if (newFilesCount + existingImagesCount > 2) {
       return res.status(400).json({ error: 'Maksimal 2 gambar yang dapat diunggah.' });
     }
 
-    let imageFilenames = barang.gambar ? barang.gambar.split(',') : [];
+    let finalImageFilenames = [];
+
     if (req.files && req.files.length > 0) {
-      if (imageFilenames.length > 0) {
-        imageFilenames.forEach(filename => {
-          const filePath = path.join(__dirname, '../uploads/barang', filename);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        });
+      const barangDir = path.join(__dirname, '../uploads/barang');
+      if (!fs.existsSync(barangDir)) {
+        fs.mkdirSync(barangDir, { recursive: true });
       }
 
-      // Proses gambar baru
-      imageFilenames = [];
       for (let i = 0; i < req.files.length; i++) {
         const file = req.files[i];
         const fileExtension = path.extname(file.originalname);
-        const newFilename = `${barang.id_barang}_${i + 1}${fileExtension}`;
+        const newFilename = `${barang.id_barang}_${Date.now()}_${i + 1}${fileExtension}`;
         const oldPath = path.join(file.destination, file.filename);
-        const newPath = path.join(file.destination, newFilename);
+        const newPath = path.join(barangDir, newFilename);
 
-        fs.renameSync(oldPath, newPath);
-        imageFilenames.push(newFilename);
+        try {
+          fs.renameSync(oldPath, newPath);
+          finalImageFilenames.push(newFilename);
+          console.log(`New file saved: ${newFilename}`);
+        } catch (err) {
+          console.error(`Error moving file ${file.filename}:`, err);
+          return res.status(500).json({ error: 'Gagal memproses file gambar.' });
+        }
+      }
+
+      if (keep_existing_images === 'true' && existing_images) {
+        try {
+          const existingArray = typeof existing_images === 'string' ? JSON.parse(existing_images) : existing_images;
+          if (Array.isArray(existingArray)) {
+            const processedExisting = existingArray.map((img) => {
+              return img.includes('/uploads/barang/') ? img.split('/uploads/barang/').pop() : img;
+            });
+            finalImageFilenames = [...processedExisting, ...finalImageFilenames];
+            console.log('Combined images:', finalImageFilenames);
+          }
+        } catch (err) {
+          console.error('Error processing existing images:', err);
+        }
+      }
+
+      // Delete old images not in finalImageFilenames
+      if (barang.gambar) {
+        const oldImageFilenames = barang.gambar.split(',').map((img) => img.trim());
+        oldImageFilenames.forEach((filename) => {
+          const actualFilename = filename.includes('/') ? filename.split('/').pop() : filename;
+          if (!finalImageFilenames.includes(actualFilename)) {
+            const filePath = path.join(__dirname, '../uploads/barang', actualFilename);
+            if (fs.existsSync(filePath)) {
+              try {
+                fs.unlinkSync(filePath);
+                console.log(`Deleted old image: ${actualFilename}`);
+              } catch (err) {
+                console.error(`Error deleting file ${actualFilename}:`, err);
+              }
+            }
+          }
+        });
+      }
+    } else if (existing_images && keep_existing_images === 'true') {
+      try {
+        const existingArray = typeof existing_images === 'string' ? JSON.parse(existing_images) : existing_images;
+        if (Array.isArray(existingArray)) {
+          finalImageFilenames = existingArray.map((img) =>
+            img.includes('/uploads/barang/') ? img.split('/uploads/barang/').pop() : img
+          );
+        }
+      } catch (err) {
+        console.error('Error parsing existing_images:', err);
+        finalImageFilenames = barang.gambar ? barang.gambar.split(',').map((img) => img.trim()) : [];
       }
     }
 
-    const gambar = imageFilenames.length > 0 ? imageFilenames.join(',') : null;
+    const updateData = {
+      id_penitip: id_penitip !== undefined && id_penitip !== '' ? id_penitip : barang.id_penitip,
+      id_hunter: id_hunter !== undefined ? (id_hunter === '' || id_hunter === 'null' ? null : id_hunter) : barang.id_hunter,
+      id_pegawai_gudang:
+        id_pegawai_gudang !== undefined && id_pegawai_gudang !== '' ? id_pegawai_gudang : barang.id_pegawai_gudang,
+      nama: nama !== undefined && nama !== '' ? nama : barang.nama,
+      deskripsi: deskripsi !== undefined ? deskripsi : barang.deskripsi,
+      gambar: finalImageFilenames.length > 0 ? finalImageFilenames.join(',') : barang.gambar,
+      harga: harga !== undefined && harga !== '' ? parseFloat(harga) : barang.harga,
+      garansi_berlaku:
+        garansi_berlaku !== undefined
+          ? garansi_berlaku === 'true' || garansi_berlaku === true || garansi_berlaku === 'on'
+          : barang.garansi_berlaku,
+      tanggal_garansi: tanggal_garansi !== undefined ? (tanggal_garansi === '' ? null : tanggal_garansi) : barang.tanggal_garansi,
+      berat: berat !== undefined && berat !== '' ? parseFloat(berat) : barang.berat,
+      status_qc: status_qc !== undefined && status_qc !== '' ? status_qc : barang.status_qc,
+      kategori_barang:
+        kategori_barang !== undefined && kategori_barang !== '' ? kategori_barang : barang.kategori_barang,
+    };
 
-    await barang.update({
-      id_penitip,
-      id_hunter: hunterId,
-      id_pegawai_gudang,
-      nama,
-      deskripsi,
-      gambar,
-      harga,
-      garansi_berlaku,
-      tanggal_garansi,
-      berat,
-      status_qc,
-      kategori_barang
+    console.log('Final update data:', updateData);
+
+    await barang.update(updateData);
+
+    const updatedBarang = await Barang.findByPk(req.params.id, {
+      include: [
+        {
+          model: Penitip,
+          attributes: ['id_penitip', 'nama_penitip', 'foto_ktp', 'nomor_ktp', 'rating', 'badge'],
+        },
+        {
+          model: Pegawai,
+          as: 'Hunter',
+          attributes: ['id_pegawai', 'nama_pegawai'],
+        },
+        {
+          model: Pegawai,
+          as: 'PegawaiGudang',
+          attributes: ['id_pegawai', 'nama_pegawai'],
+        },
+      ],
     });
 
-    res.status(200).json(barang);
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000/uploads/barang/';
+    if (updatedBarang.gambar) {
+      const imageArray = updatedBarang.gambar.split(',').map((img) => img.trim());
+      updatedBarang.gambar = imageArray.map((img) => `${baseUrl}${img}`).join(',');
+    }
+
+    console.log('Barang updated successfully:', updatedBarang.toJSON());
+    res.status(200).json(updatedBarang);
   } catch (error) {
+    console.error('Error in updateBarang:', error);
     res.status(500).json({ error: error.message });
   }
 };

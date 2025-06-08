@@ -1,0 +1,55 @@
+where: {
+  status: { [Op.eq]: 'aktif' } // equal
+}
+
+where: {
+  status: { [Op.ne]: 'nonaktif' } // not equal
+}
+
+where: {
+  umur: { [Op.gte]: 18, [Op.lte]: 30 } // lebih dari, kurang dari
+}
+
+where: {
+  nama: { [Op.like]: '%andi%' } // contains 'andi'
+}
+
+where: {
+  status: { [Op.in]: ['aktif', 'pending'] } // termasuk dalam array
+}
+
+where: {
+  role: { [Op.notIn]: ['admin', 'owner'] } // tidak termasuk dalam array
+}
+
+where: {
+  tanggal: { [Op.between]: ['2024-01-01', '2024-12-31'] }
+}
+
+where: {
+  [Op.or]: [
+    { nama: { [Op.like]: '%budi%' } },
+    { email: { [Op.like]: '%@gmail.com%' } }
+  ]
+}
+
+where: {
+  [Op.and]: [
+    { status: 'aktif' },
+    { umur: { [Op.gte]: 21 } }
+  ]
+}
+
+where: {
+  nama: { [Op.not]: { [Op.like]: '%admin%' } }
+}
+
+// contoh penerapan
+const barang = await Barang.findAll({
+  where: {
+    nama_barang: { [Op.like]: '%kipas%' },
+    harga: { [Op.between]: [50000, 200000] },
+    stok: { [Op.gt]: 0 }
+  },
+  order: [['createdAt', 'DESC']]
+});

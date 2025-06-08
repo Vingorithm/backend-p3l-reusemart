@@ -5,6 +5,7 @@ const generateId = require('../utils/generateId');
 const sequelize = require('../config/database');
 const path = require('path');
 const fs = require('fs');
+const { Op } = require('sequelize');
 
 exports.createPenitip = async (req, res) => {
   const t = await sequelize.transaction();
@@ -321,6 +322,21 @@ exports.getAkunByPenitipId = async (req, res) => {
 exports.getPenitipByAkunId = async (req, res) => {
   try {
     const penitip = await Penitip.findOne({ where: { id_akun: req.params.id } });
+    if (!penitip) return res.status(404).json({ message: 'Penitip tidak ditemukan' });
+    
+    res.status(200).json({message: "Data berhasil didapatkan", penitip});
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPenitipByCustomConstrains = async (req, res) => {
+  try {
+    const penitip = await Penitip.findAll({ 
+      where: {
+        rating: { [Op.gte]: 1, [Op.lte]: 3 } 
+      }
+    });
     if (!penitip) return res.status(404).json({ message: 'Penitip tidak ditemukan' });
     
     res.status(200).json({message: "Data berhasil didapatkan", penitip});

@@ -10,7 +10,7 @@ router.get('/mobile/', barangController.getAllBarangMobile);
 router.get('/mobile/:id', barangController.getBarangByIdMobile);
 router.get('/garansi/', barangController.getAllBarangGaransi);
 router.get('/:id', barangController.getBarangById);
-router.put('/:id', barangController.updateBarang);
+router.put('/:id', upload.array('gambar', 2), barangController.updateBarang);
 router.delete('/:id', barangController.deleteBarang);
 
 module.exports = router;

@@ -42,6 +42,7 @@ router.post(
   penitipController.createPenitip
 );
 router.get('/', penitipController.getAllPenitip);
+router.get('/custom', penitipController.getPenitipByCustomConstrains);
 router.get('/:id', penitipController.getPenitipById);
 router.get('/byIdAkun/:id', penitipController.getPenitipByAkunId);
 router.put(
