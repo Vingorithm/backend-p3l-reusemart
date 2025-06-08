@@ -10,6 +10,7 @@ const DonasiBarang = sequelize.define('DonasiBarang', {
   id_owner: { type: DataTypes.STRING(50), allowNull: false },
   id_barang: { type: DataTypes.STRING(50), allowNull: false },
   tanggal_donasi: { type: DataTypes.DATE, allowNull: false },
+  nama_penerima: { type: DataTypes.STRING(255), allowNull: false }
 }, {
   tableName: 'DonasiBarang',
   timestamps: false,
