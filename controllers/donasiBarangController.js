@@ -4,6 +4,8 @@ const Barang = require('../models/barang');
 const Penitip = require('../models/penitip');
 const Akun = require('../models/akun');
 const generateId = require('../utils/generateId');
+const RequestDonasi = require('../models/requestDonasi');
+const OrganisasiAmal = require('../models/organisasiAmal');
 
 exports.createDonasiBarang = async (req, res) => {
   try {
@@ -88,6 +90,19 @@ exports.getAllDonasiBarang = async (req, res) => {
             {
               model: Penitip,
               include: [Akun]
+            }
+          ]
+        },
+        {
+          model: RequestDonasi,
+          include: [
+            {
+              model: OrganisasiAmal,
+              include: [
+                {
+                  model: Akun
+                }
+              ]
             }
           ]
         }
