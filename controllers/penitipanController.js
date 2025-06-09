@@ -3,13 +3,14 @@ const Barang = require('../models/barang');
 const Penitip = require('../models/penitip');
 const Akun = require('../models/akun');
 const generateId = require('../utils/generateId');
-
 const Pembelian = require('../models/pembelian');
 const Pengiriman = require('../models/pengiriman');
 const Pembeli = require('../models/pembeli');
 const AlamatPembeli = require('../models/alamatPembeli');
 const SubPembelian = require('../models/subPembelian');
 const Pegawai = require('../models/pegawai');
+const cron = require('node-cron');
+const { Op } = require('sequelize');
 
 exports.createPenitipan = async (req, res) => {
   try {
@@ -53,9 +54,9 @@ exports.getAllPenitipan = async (req, res) => {
             },
             {
               model: Pegawai,
-              as: 'Hunter', // Alias untuk hunter
+              as: 'Hunter',
               attributes: ['id_pegawai', 'nama_pegawai', 'tanggal_lahir'],
-              required: false, // Left join karena bisa null
+              required: false,
               include: [{
                 model: Akun,
                 attributes: ['id_akun', 'email', 'profile_picture', 'role'],
@@ -63,9 +64,9 @@ exports.getAllPenitipan = async (req, res) => {
             },
             {
               model: Pegawai,
-              as: 'PegawaiGudang', // Alias untuk pegawai gudang
+              as: 'PegawaiGudang',
               attributes: ['id_pegawai', 'nama_pegawai', 'tanggal_lahir'],
-              required: false, // Left join karena bisa null
+              required: false,
               include: [{
                 model: Akun,
                 attributes: ['id_akun', 'email', 'profile_picture', 'role'],
@@ -77,7 +78,6 @@ exports.getAllPenitipan = async (req, res) => {
       order: [['id_barang', 'ASC']]
     });
     
-    // Tambahin Url pada saat return gambar
     const penitipanWithFullImageUrl = penitipan.map(p => {
       const barang = p.Barang;
       if (barang && barang.gambar) {
@@ -164,7 +164,6 @@ exports.getPenitipanByIdBarang = async (req, res) => {
   }
 };
 
-
 exports.updatePenitipan = async (req, res) => {
   try {
     const { id_barang, tanggal_awal_penitipan, tanggal_akhir_penitipan, tanggal_batas_pengambilan, perpanjangan, status_penitipan } = req.body;
@@ -190,8 +189,8 @@ exports.deletePenitipan = async (req, res) => {
 
 exports.getPenitipanByIdPenitip = async (req, res) => {
   try {
-    const { id } = req.params; // Pakai id, bukan id_penitip
-    console.log('Requested ID Penitip:', id); // Log ID
+    const { id } = req.params;
+    console.log('Requested ID Penitip:', id);
     const baseUrl = 'http://localhost:3000/uploads/barang/';
     
     const penitipan = await Penitipan.findAll({
@@ -217,7 +216,7 @@ exports.getPenitipanByIdPenitip = async (req, res) => {
       order: [['id_barang', 'ASC']]
     });
 
-    console.log('Penitipan Found:', penitipan.length, 'records'); // Log jumlah data
+    console.log('Penitipan Found:', penitipan.length, 'records');
     if (!penitipan.length) {
       return res.status(404).json({ message: `Penitipan tidak ditemukan untuk id_penitip: ${id}` });
     }
@@ -237,7 +236,6 @@ exports.getPenitipanByIdPenitip = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 exports.getItemForScheduling = async (req, res) => {
   try {
@@ -421,6 +419,49 @@ exports.confirmReceipt = async (req, res) => {
   }
 };
 
+exports.checkOverduePenitipan = async () => {
+  try {
+    const penitipanList = await Penitipan.findAll({
+      where: {
+        status_penitipan: { [Op.ne]: 'Menunggu didonasikan' }
+      }
+    });
+
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+
+    for (const penitipan of penitipanList) {
+      const startDate = new Date(penitipan.tanggal_akhir_penitipan);
+      const endDate = new Date(penitipan.tanggal_batas_pengambilan);
+      const duration = endDate - startDate;
+
+      if (duration < sevenDaysInMs) {
+        await penitipan.update({ status_penitipan: 'Menunggu didonasikan' });
+        console.log(`Penitipan ${penitipan.id_penitipan} updated to 'Menunggu didonasikan'`);
+      }
+    }
+  } catch (error) {
+    console.error('Error in checkOverduePenitipan:', error);
+  }
+};
+
+exports.manualCheckOverduePenitipan = async (req, res) => {
+  try {
+    const { updatedCount, updatedIds } = await exports.checkOverduePenitipan();
+    res.status(200).json({
+      message: `Manual check completed. ${updatedCount} penitipan records updated to 'Menunggu didonasikan'.`,
+      updatedIds
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Buat ngecek tiap tengah malem
+cron.schedule('0 0 * * *', () => {
+  console.log('Running checkOverduePenitipan job...');
+  exports.checkOverduePenitipan();
+});
+
 exports.getPenitipanByStatus = async (req, res) => {
   try {
     const { status } = req.params;
@@ -490,3 +531,5 @@ exports.getPenitipanByStatus = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
