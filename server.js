@@ -42,14 +42,14 @@ const startScheduledTasks = () => {
   scheduleTopPenitipBadgeUpdate();
 };
 
-sequelize.sync({ force: false })
-  .then(() => {
-    console.log('Database synced successfully');
+// Tanpa Sync Database
+app.listen(PORT, async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connected');
     startScheduledTasks();
-    app.listen(PORT, () => {
-      console.log(`Server berjalan di port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('Error syncing database:', err);
-  });
+    console.log(`Server berjalan di port ${PORT}`);
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+});
