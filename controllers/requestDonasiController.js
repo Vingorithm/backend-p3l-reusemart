@@ -3,6 +3,7 @@ const RequestDonasi = require('../models/requestDonasi');
 const generateId = require('../utils/generateId');
 const Organisasi = require('../models/organisasiAmal');
 const Akun = require('../models/akun');
+const Donasi = require('../models/donasiBarang');
 
 // const generateNewId = async () => {
 //   const last = await RequestDonasi.findOne({
@@ -51,6 +52,9 @@ exports.getAllRequestDonasi = async (req, res) => {
               attributes: ['id_akun', 'email', 'profile_picture']
             }
           ]
+        },
+        {
+          model: Donasi
         }
       ],
       order: [['id_organisasi', 'ASC']]

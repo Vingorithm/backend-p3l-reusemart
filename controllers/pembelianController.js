@@ -133,6 +133,9 @@ exports.getAllPembelian = async (req, res) => {
                 }
               ]
             },
+            {
+              model: Transaksi,
+            }
           ]
         }
       ]
