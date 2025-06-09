@@ -420,3 +420,73 @@ exports.confirmReceipt = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getPenitipanByStatus = async (req, res) => {
+  try {
+    const { status } = req.params;
+
+    // Validate status
+    const validStatuses = [
+      'Menunggu diambil',
+      'Terjual',
+      'Menunggu didonasikan',
+      // Add other valid statuses as needed
+    ];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status_penitipan value' });
+    }
+
+    const penitipanRecords = await Penitipan.findAll({
+      where: { status_penitipan: status },
+      include: [
+        {
+          model: Barang,
+          include: [
+            {
+              model: Penitip,
+              include: [
+                {
+                  model: Akun,
+                  attributes: ['id_akun', 'email', 'fcm_token', 'profile_picture', 'role'],
+                },
+              ],
+              attributes: ['id_penitip', 'nama_penitip', 'total_poin', 'tanggal_registrasi'],
+            },
+          ],
+          attributes: [
+            'id_barang',
+            'id_penitip',
+            'id_hunter',
+            'id_pegawai_gudang',
+            'nama',
+            'gambar',
+            'harga',
+            'garansi_berlaku',
+            'tanggal_garansi',
+            'berat',
+            'status_qc',
+            'kategori_barang',
+          ],
+        },
+      ],
+      attributes: [
+        'id_penitipan',
+        'id_barang',
+        'tanggal_awal_penitipan',
+        'tanggal_akhir_penitipan',
+        'tanggal_batas_pengambilan',
+        'perpanjangan',
+        'status_penitipan',
+      ],
+    });
+
+    if (!penitipanRecords.length) {
+      return res.status(404).json({ message: `No penitipan found with status ${status}` });
+    }
+
+    res.status(200).json(penitipanRecords);
+  } catch (error) {
+    console.error('Error fetching penitipan by status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -71,5 +71,6 @@ router.get('/byIdPenitip/:id', penitipanController.getPenitipanByIdPenitip);
 router.get('/item-for-scheduling/:id', penitipanController.getItemForScheduling);
 router.put('/schedule-pickup/:id', penitipanController.schedulePickup);
 router.patch('/confirm-receipt/:id_pengiriman', penitipanController.confirmReceipt);
+router.get('/byStatus/:status', penitipanController.getPenitipanByStatus);
 
 module.exports = router;
