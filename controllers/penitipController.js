@@ -1,5 +1,9 @@
 const Penitip = require('../models/penitip');
 const Akun = require('../models/akun');
+const Barang = require('../models/barang');
+const SubPembelian = require('../models/subPembelian');
+const Pembelian = require('../models/pembelian');
+const Transaksi = require('../models/transaksi');
 const bcrypt = require('bcryptjs');
 const generateId = require('../utils/generateId');
 const sequelize = require('../config/database');
@@ -342,5 +346,87 @@ exports.getPenitipByCustomConstrains = async (req, res) => {
     res.status(200).json({message: "Data berhasil didapatkan", penitip});
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateTopPenitipBadge = async () => {
+  const t = await sequelize.transaction();
+
+  try {
+    const today = new Date();
+    const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDayOfPreviousMonth = new Date(firstDayOfCurrentMonth - 1);
+    const firstDayOfPreviousMonth = new Date(lastDayOfPreviousMonth.getFullYear(), lastDayOfPreviousMonth.getMonth(), 1);
+
+    const salesByPenitip = await Transaksi.findAll({
+      attributes: [
+        [sequelize.col('SubPembelian.Barang.id_penitip'), 'id_penitip'],
+        [sequelize.fn('COUNT', sequelize.col('Transaksi.id_transaksi')), 'total_sales']
+      ],
+      include: [{
+        model: SubPembelian,
+        attributes: [],
+        include: [{
+          model: Barang,
+          attributes: [],
+        }, {
+          model: Pembelian,
+          attributes: [],
+          where: {
+            tanggal_pelunasan: {
+              [Op.between]: [firstDayOfPreviousMonth, lastDayOfPreviousMonth]
+            }
+          }
+        }]
+      }],
+      group: ['SubPembelian.Barang.id_penitip'],
+      order: [[sequelize.literal('total_sales'), 'DESC']],
+      limit: 1,
+      transaction: t
+    });
+
+    await Penitip.update(
+      { badge: 0 },
+      { where: {}, transaction: t }
+    );
+
+    if (salesByPenitip.length > 0) {
+      const topPenitipId = salesByPenitip[0].dataValues.id_penitip;
+      const totalSales = salesByPenitip[0].dataValues.total_sales;
+      console.log(`Updating badge for penitip ${topPenitipId} with ${totalSales} sales`);
+      await Penitip.update(
+        { badge: 1 },
+        { 
+          where: { id_penitip: topPenitipId },
+          transaction: t 
+        }
+      );
+    } else {
+      console.log('No sales found for the previous month');
+    }
+
+    await t.commit();
+    console.log('Top penitip badge updated successfully');
+    return { message: 'Top penitip badge updated successfully' };
+  } catch (error) {
+    await t.rollback();
+    console.error('Error updating top penitip badge:', error);
+    throw new Error('Failed to update top penitip badge: ' + error.message);
+  }
+};
+
+exports.checkTopPenitipBadge = async (req, res) => {
+  try {
+    const result = await exports.updateTopPenitipBadge();
+    res.status(200).json({
+      message: 'Top penitip badge check executed successfully',
+      details: result
+    });
+  } catch (error) {
+    console.error('Error checking top penitip badge:', error.message);
+    res.status(500).json({
+      error: 'Failed to check top penitip badge',
+      details: error.message
+    });
   }
 };

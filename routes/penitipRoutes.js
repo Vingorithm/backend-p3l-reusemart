@@ -54,5 +54,6 @@ router.put(
   penitipController.updatePenitip
 );
 router.delete('/:id', penitipController.deletePenitip);
+router.get('/check/check-badge', penitipController.checkTopPenitipBadge);
 
 module.exports = router;
