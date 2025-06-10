@@ -66,10 +66,44 @@ exports.getAllClaimMerchandise = async (req, res) => {
   }
 };
 
+exports.getClaimMerchandiseByIdPembeli = async (req, res) => {
+  try {
+    const claim = await ClaimMerchandise.findAll({
+        where: { id_pembeli: req.params.id },
+        include: [
+        {
+          model: Pembeli,
+          attributes: ['id_pembeli', 'id_akun', 'nama', 'total_poin', 'tanggal_registrasi'],
+            include: [
+              {
+                model: Akun,
+                attributes: ['id_akun', 'email']
+              }
+            ]
+        },
+        {
+          model: Merchandise,
+          attributes: ['id_merchandise', 'id_admin', 'nama_merchandise', 'harga_poin', 'deskripsi', 'gambar', 'stok_merchandise'],
+          include: [
+              {
+                model: Pegawai,
+                attributes: ['id_pegawai', 'id_akun', 'nama_pegawai']
+              }
+            ]
+        }
+      ],
+      order: [['tanggal_claim', 'DESC']]
+    });
+    if (!claim) return res.status(404).json({ message: 'Claim merchandise tidak ditemukan' });
+    res.status(200).json(claim);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getClaimMerchandiseById = async (req, res) => {
   try {
-    const claim = await ClaimMerchandise.findByPk(req.params.id, 
-      {
+    const claim = await ClaimMerchandise.findByPk(req.params.id, {
         include: [
         {
           model: Pembeli,
