@@ -351,7 +351,6 @@ exports.getPenitipByCustomConstrains = async (req, res) => {
 
 exports.updateTopPenitipBadge = async () => {
   const t = await sequelize.transaction();
-
   try {
     const today = new Date();
     const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -361,7 +360,8 @@ exports.updateTopPenitipBadge = async () => {
     const salesByPenitip = await Transaksi.findAll({
       attributes: [
         [sequelize.col('SubPembelian.Barang.id_penitip'), 'id_penitip'],
-        [sequelize.fn('COUNT', sequelize.col('Transaksi.id_transaksi')), 'total_sales']
+        [sequelize.fn('COUNT', sequelize.col('Transaksi.id_transaksi')), 'total_sales'],
+        [sequelize.fn('SUM', sequelize.col('SubPembelian.Pembelian.total_harga')), 'total_penjualan']
       ],
       include: [{
         model: SubPembelian,
@@ -369,6 +369,7 @@ exports.updateTopPenitipBadge = async () => {
         include: [{
           model: Barang,
           attributes: [],
+          required: true
         }, {
           model: Pembelian,
           attributes: [],
@@ -379,39 +380,65 @@ exports.updateTopPenitipBadge = async () => {
           }
         }]
       }],
+      where: {
+        '$SubPembelian.Barang.id_penitip$': { [Op.ne]: null }
+      },
       group: ['SubPembelian.Barang.id_penitip'],
       order: [[sequelize.literal('total_sales'), 'DESC']],
       limit: 1,
       transaction: t
     });
+    
+    await Penitip.update({ badge: 0 }, { where: {}, transaction: t });
 
-    await Penitip.update(
-      { badge: 0 },
-      { where: {}, transaction: t }
-    );
-
-    if (salesByPenitip.length > 0) {
-      const topPenitipId = salesByPenitip[0].dataValues.id_penitip;
-      const totalSales = salesByPenitip[0].dataValues.total_sales;
-      console.log(`Updating badge for penitip ${topPenitipId} with ${totalSales} sales`);
-      await Penitip.update(
-        { badge: 1 },
-        { 
-          where: { id_penitip: topPenitipId },
-          transaction: t 
-        }
-      );
-    } else {
-      console.log('No sales found for the previous month');
+    if (salesByPenitip.length === 0) {
+      await t.commit();
+      return { message: 'Tidak ada transaksi di bulan lalu, tidak ada penitip yang diperbarui.' };
     }
 
+    const topPenitipId = salesByPenitip[0].dataValues.id_penitip;
+    const totalSales = salesByPenitip[0].dataValues.total_sales;
+    const totalPenjualan = salesByPenitip[0].dataValues.total_penjualan;
+
+    if (!topPenitipId) {
+      await t.commit();
+      return {
+        message: 'Gagal memperbarui badge: id_penitip tidak valid.',
+        details: { topPenitipId, totalSales, totalPenjualan }
+      };
+    }
+
+    const penjualan = parseFloat(totalPenjualan ?? 0);
+    const poinTambahan = Math.floor(penjualan / 10000);
+
+    const [updatedRows] = await Penitip.update(
+      {
+        badge: 1,
+        total_poin: sequelize.literal(`total_poin + ${poinTambahan}`)
+      },
+      {
+        where: { id_penitip: topPenitipId },
+        transaction: t
+      }
+    );
+
     await t.commit();
-    console.log('Top penitip badge updated successfully');
-    return { message: 'Top penitip badge updated successfully' };
+
+    if (updatedRows === 0) {
+      return {
+        message: 'Gagal memperbarui badge: Tidak ada penitip dengan id_penitip yang cocok.',
+        details: { topPenitipId, totalSales, totalPenjualan, poinTambahan }
+      };
+    }
+
+    return {
+      message: 'Top penitip badge dan poin berhasil diperbarui.',
+      details: { topPenitipId, totalSales, totalPenjualan, poinTambahan }
+    };
   } catch (error) {
     await t.rollback();
     console.error('Error updating top penitip badge:', error);
-    throw new Error('Failed to update top penitip badge: ' + error.message);
+    throw new Error('Gagal memperbarui badge dan poin penitip: ' + error.message);
   }
 };
 

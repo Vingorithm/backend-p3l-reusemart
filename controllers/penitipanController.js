@@ -419,32 +419,39 @@ exports.confirmReceipt = async (req, res) => {
   }
 };
 
-exports.checkOverduePenitipan = async () => {
+exports.checkPenitipanHabis = async () => {
   try {
     const penitipanList = await Penitipan.findAll({
       where: {
-        status_penitipan: { [Op.ne]: 'Menunggu didonasikan' }
+        status_penitipan: {
+          [Op.in]: ['Dalam masa penitipan', 'Masa penitipan diperpanjang']
+        }
       }
     });
 
-    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    let updatedCount = 0;
+    const updatedIds = [];
 
     for (const penitipan of penitipanList) {
-      const startDate = new Date(penitipan.tanggal_akhir_penitipan);
-      const endDate = new Date(penitipan.tanggal_batas_pengambilan);
-      const duration = endDate - startDate;
+      const batasPengambilan = new Date(penitipan.tanggal_batas_pengambilan);
 
-      if (duration < sevenDaysInMs) {
+      if (now > batasPengambilan) {
         await penitipan.update({ status_penitipan: 'Menunggu didonasikan' });
-        console.log(`Penitipan ${penitipan.id_penitipan} updated to 'Menunggu didonasikan'`);
+        console.log(`Penitipan dengan ID ${penitipan.id_penitipan} updated to 'Menunggu didonasikan'`);
+        updatedCount++;
+        updatedIds.push(penitipan.id_penitipan);
       }
+      
     }
+
+    return { updatedCount, updatedIds };
   } catch (error) {
     console.error('Error in checkOverduePenitipan:', error);
   }
 };
 
-exports.manualCheckOverduePenitipan = async (req, res) => {
+exports.manualCheckPenitipanHabis = async (req, res) => {
   try {
     const { updatedCount, updatedIds } = await exports.checkOverduePenitipan();
     res.status(200).json({
@@ -458,8 +465,8 @@ exports.manualCheckOverduePenitipan = async (req, res) => {
 
 // Buat ngecek tiap tengah malem
 cron.schedule('0 0 * * *', () => {
-  console.log('Running checkOverduePenitipan job...');
-  exports.checkOverduePenitipan();
+  console.log('Running check penitipan habis job...');
+  exports.checkPenitipanHabis();
 });
 
 exports.getPenitipanByStatus = async (req, res) => {
