@@ -112,3 +112,83 @@ exports.deleteTransaksi = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getTransaksiByHunterId = async (req, res) => {
+  try {
+    const { id_hunter } = req.params;
+    
+    const transaksi = await Transaksi.findAll({
+      include: [
+        {
+          model: SubPembelian,
+          include: [
+            {
+              model: Barang,
+              where: { id_hunter: id_hunter },
+              attributes: ['id_barang', 'id_hunter', 'nama', 'harga'],
+            },
+          ],
+          attributes: ['id_sub_pembelian', 'id_pembelian', 'id_barang'],
+        },
+      ],
+      order: [['id_transaksi', 'DESC']],
+    });
+
+    const totalKomisiHunter = transaksi.reduce((total, item) => {
+      return total + parseFloat(item.komisi_hunter || 0);
+    }, 0);
+
+    res.status(200).json({
+      transaksi: transaksi,
+      total_komisi_hunter: totalKomisiHunter,
+      jumlah_transaksi: transaksi.length
+    });
+  } catch (error) {
+    console.error('Error getting transaksi by hunter:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+exports.getHunterKomisiSummary = async (req, res) => {
+  try {
+    const { id_hunter } = req.params;
+    
+    // Query dengan WHERE clause yang tepat untuk filter berdasarkan id_hunter
+    const transaksi = await Transaksi.findAll({
+      include: [
+        {
+          model: SubPembelian,
+          required: true, // INNER JOIN - penting!
+          include: [
+            {
+              model: Barang,
+              required: true, // INNER JOIN - penting!
+              where: { 
+                id_hunter: id_hunter // Filter hanya barang dengan hunter tertentu
+              },
+              attributes: ['id_barang', 'id_hunter', 'nama', 'harga'],
+            }
+          ],
+          attributes: ['id_sub_pembelian', 'id_barang'],
+        }
+      ],
+      attributes: ['id_transaksi', 'komisi_hunter'],
+    });
+
+    // Hitung total komisi hunter
+    const totalKomisiHunter = transaksi.reduce((total, item) => {
+      return total + parseFloat(item.komisi_hunter || 0);
+    }, 0);
+
+    res.status(200).json({
+      id_hunter: id_hunter,
+      total_komisi_hunter: totalKomisiHunter,
+      jumlah_transaksi: transaksi.length,
+      transaksi: transaksi // untuk debugging
+    });
+  } catch (error) {
+    console.error('Error getting hunter komisi summary:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
