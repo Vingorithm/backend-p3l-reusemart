@@ -10,5 +10,7 @@ router.get('/:id', pembeliController.getPembeliById);
 router.get('/byIdAkun/:id', pembeliController.getPembeliByAkunId);
 router.put('/:id', pembeliController.updatePembeli);
 router.delete('/:id', pembeliController.deletePembeli);
+router.put('/:id/poin', pembeliController.updatePoinPembeli);
+
 
 module.exports = router;
