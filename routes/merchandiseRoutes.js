@@ -6,8 +6,10 @@ const upload = require('../middleware/upload');
 
 router.post('/', upload.single('gambar'), merchandiseController.createMerchandise);
 router.get('/', merchandiseController.getAllMerchandise);
+router.get('/mobile', merchandiseController.getAllMobileMerchandise);
 router.get('/:id', merchandiseController.getMerchandiseById);
 router.put('/:id', merchandiseController.updateMerchandise);
 router.delete('/:id', merchandiseController.deleteMerchandise);
+
 
 module.exports = router;
