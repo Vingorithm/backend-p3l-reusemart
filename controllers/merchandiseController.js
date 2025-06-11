@@ -66,3 +66,19 @@ exports.deleteMerchandise = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getAllMobileMerchandise = async (req, res) => {
+  try {
+    const merchandise = await Merchandise.findAll();
+    
+    // Transform data untuk mobile dengan base URL
+    const mobileData = merchandise.map(item => ({
+      ...item.dataValues,
+      gambar: `http://10.0.2.2:3000/uploads/merchandise/${item.gambar}`
+    }));
+    
+    res.status(200).json(mobileData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
