@@ -82,3 +82,58 @@ exports.getAllMobileMerchandise = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
+exports.getMobileMerchandiseById = async (req, res) => {
+  try {
+    const merchandise = await Merchandise.findByPk(req.params.id);
+    
+    if (!merchandise) {
+      return res.status(404).json({ message: 'Merchandise tidak ditemukan' });
+    }
+
+    // Transform data untuk mobile dengan base URL
+    const mobileData = {
+      id_merchandise: merchandise.id_merchandise,
+      id_admin: merchandise.id_admin,
+      nama_merchandise: merchandise.nama_merchandise,
+      harga_poin: merchandise.harga_poin,
+      deskripsi: merchandise.deskripsi,
+      stok_merchandise: merchandise.stok_merchandise,
+      gambar: `http://10.0.2.2:3000/uploads/merchandise/${merchandise.gambar}`
+    };
+
+    res.status(200).json(mobileData);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateStokMerchandise = async (req, res) => {
+  try {
+    const { stok_merchandise } = req.body;
+    const merchandise = await Merchandise.findByPk(req.params.id);
+    
+    if (!merchandise) {
+      return res.status(404).json({ message: 'Merchandise tidak ditemukan' });
+    }
+    
+    // Update stok merchandise
+    await merchandise.update({ stok_merchandise });
+    
+    // Return updated merchandise data dengan base URL untuk mobile
+    const updatedData = {
+      id_merchandise: merchandise.id_merchandise,
+      id_admin: merchandise.id_admin,
+      nama_merchandise: merchandise.nama_merchandise,
+      harga_poin: merchandise.harga_poin,
+      deskripsi: merchandise.deskripsi,
+      stok_merchandise: merchandise.stok_merchandise,
+      gambar: `http://10.0.2.2:3000/uploads/merchandise/${merchandise.gambar}`
+    };
+    
+    res.status(200).json({ message: "Stok berhasil diupdate!", merchandise: updatedData });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

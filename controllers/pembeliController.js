@@ -221,3 +221,26 @@ exports.getPembeliByAkunId = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.updatePoinPembeli = async (req, res) => {
+  try {
+    const { total_poin } = req.body;
+    const pembeli = await Pembeli.findByPk(req.params.id);
+    
+    if (!pembeli) {
+      return res.status(404).json({ message: 'Pembeli tidak ditemukan' });
+    }
+    
+    // Update poin pembeli
+    await pembeli.update({ total_poin });
+    
+    // Return updated pembeli data
+    const updatedPembeli = await Pembeli.findByPk(req.params.id, {
+      include: [{ model: Akun, attributes: ['id_akun', 'email', 'role', 'profile_picture'] }]
+    });
+    
+    res.status(200).json({ message: "Poin berhasil diupdate!", pembeli: updatedPembeli });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
