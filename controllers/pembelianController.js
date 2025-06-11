@@ -65,8 +65,7 @@ exports.getAllPembelian = async (req, res) => {
           as: 'CustomerService',
           include: [
             {
-              model: Akun,
-              attributes: ['role', 'fcm_token']
+              model: Akun
             }
           ]
         },
@@ -75,8 +74,7 @@ exports.getAllPembelian = async (req, res) => {
           model: Pembeli,
           include: [
             {
-              model: Akun,
-              attributes: ['email', 'role', 'fcm_token']
+              model: Akun
             }
           ]
          },
@@ -86,8 +84,7 @@ exports.getAllPembelian = async (req, res) => {
               model: Pegawai,
               include: [
                 {
-                  model: Akun,
-                  attributes: ['role', 'fcm_token']
+                  model: Akun
                 }
               ]
             }
@@ -104,8 +101,7 @@ exports.getAllPembelian = async (req, res) => {
                   as: 'PegawaiGudang',
                   include: [
                     {
-                      model: Akun,
-                      attributes: ['role', 'fcm_token']
+                      model: Akun
                     }
                   ]
                 },
@@ -114,8 +110,7 @@ exports.getAllPembelian = async (req, res) => {
                   as: 'Hunter',
                   include: [
                     {
-                      model: Akun,
-                      attributes: ['role', 'fcm_token']
+                      model: Akun
                     }
                   ]
                 },
@@ -123,8 +118,7 @@ exports.getAllPembelian = async (req, res) => {
                   model: Penitip,
                   include: [
                     {
-                      model: Akun,
-                      attributes: ['role', 'fcm_token']
+                      model: Akun
                     }
                   ]
                 },
