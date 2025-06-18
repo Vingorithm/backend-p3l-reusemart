@@ -409,13 +409,14 @@ exports.updateTopPenitipBadge = async () => {
     }
 
     const penjualan = parseFloat(totalPenjualan ?? 0);
-    const poinTambahan = Math.floor(penjualan / 10000);
+    const poinTambahan = Math.floor(penjualan * 0.01);
 
     const [updatedRows] = await Penitip.update(
       {
         badge: 1,
-        total_poin: sequelize.literal(`total_poin + ${poinTambahan}`)
-      },
+        total_poin: sequelize.literal(`total_poin + ${poinTambahan}`),
+        // keuntungan: 
+      },  
       {
         where: { id_penitip: topPenitipId },
         transaction: t

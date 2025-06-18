@@ -434,6 +434,7 @@ exports.checkPenitipanHabis = async () => {
     const updatedIds = [];
 
     for (const penitipan of penitipanList) {
+      const batasAkhir = new Date(penitipan.tanggal_akhir_penitipan);
       const batasPengambilan = new Date(penitipan.tanggal_batas_pengambilan);
 
       if (now > batasPengambilan) {
@@ -441,8 +442,12 @@ exports.checkPenitipanHabis = async () => {
         console.log(`Penitipan dengan ID ${penitipan.id_penitipan} updated to 'Menunggu didonasikan'`);
         updatedCount++;
         updatedIds.push(penitipan.id_penitipan);
+      }else if(now > batasAkhir && now < batasPengambilan){
+        await penitipan.update({ status_penitipan: 'Menunggu untuk diambil' });
+        console.log(`Penitipan dengan ID ${penitipan.id_penitipan} updated to 'Menunggu untuk diambil'`);
+        updatedCount++;
+        updatedIds.push(penitipan.id_penitipan);
       }
-      
     }
 
     return { updatedCount, updatedIds };
@@ -453,7 +458,7 @@ exports.checkPenitipanHabis = async () => {
 
 exports.manualCheckPenitipanHabis = async (req, res) => {
   try {
-    const { updatedCount, updatedIds } = await exports.checkOverduePenitipan();
+    const { updatedCount, updatedIds } = await exports.checkPenitipanHabis();
     res.status(200).json({
       message: `Manual check completed. ${updatedCount} penitipan records updated to 'Menunggu didonasikan'.`,
       updatedIds

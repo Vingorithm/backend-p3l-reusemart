@@ -5,6 +5,7 @@ const Pembeli = require('../models/pembeli');
 const Akun = require('../models/akun');
 const Pegawai = require('../models/pegawai');
 const Merchandise = require('../models/merchandise');
+const { Op } = require('sequelize');
 
 exports.createClaimMerchandise = async (req, res) => {
   try {
@@ -56,6 +57,45 @@ exports.getAllClaimMerchandise = async (req, res) => {
                 attributes: ['id_pegawai', 'id_akun', 'nama_pegawai']
               }
             ]
+        }
+      ],
+      order: [['tanggal_claim', 'DESC']]
+    });
+    res.status(200).json(claim);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getAllClaimMerchandiseCustom = async (req, res) => {
+  try {
+    const claim = await ClaimMerchandise.findAll({
+        where: {
+          tanggal_claim: {[Op.between]: ['2025-06-01', '2025-06-30']},
+        },
+        include: [
+        {
+          model: Pembeli,
+          attributes: ['id_pembeli', 'id_akun', 'nama', 'total_poin', 'tanggal_registrasi'],
+            include: [
+              {
+                model: Akun,
+                attributes: ['id_akun', 'email']
+              }
+            ]
+        },
+        {
+          model: Merchandise,
+          attributes: ['id_merchandise', 'id_admin', 'nama_merchandise', 'harga_poin', 'deskripsi', 'gambar', 'stok_merchandise', 'harga_poin'],
+          where: {
+            harga_poin: {[Op.gte]: 100},
+          },
+          include: [
+              {
+                model: Pegawai,
+                attributes: ['id_pegawai', 'id_akun', 'nama_pegawai']
+              }
+          ]
         }
       ],
       order: [['tanggal_claim', 'DESC']]

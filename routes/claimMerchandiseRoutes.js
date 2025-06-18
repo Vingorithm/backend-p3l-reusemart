@@ -6,6 +6,7 @@ const upload = multer();
 
 router.post('/', upload.none(), claimMerchandiseController.createClaimMerchandise);
 router.get('/', claimMerchandiseController.getAllClaimMerchandise);
+router.get('/custom', claimMerchandiseController.getAllClaimMerchandiseCustom);
 router.get('/:id', claimMerchandiseController.getClaimMerchandiseById);
 router.get('/byIdPembeli/:id', claimMerchandiseController.getClaimMerchandiseByIdPembeli);
 router.put('/:id', claimMerchandiseController.updateClaimMerchandise);
