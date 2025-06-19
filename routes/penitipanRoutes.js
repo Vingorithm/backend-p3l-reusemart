@@ -73,5 +73,8 @@ router.put('/schedule-pickup/:id', penitipanController.schedulePickup);
 router.patch('/confirm-receipt/:id_pengiriman', penitipanController.confirmReceipt);
 router.get('/check/check-overdue', penitipanController.manualCheckPenitipanHabis);
 router.get('/byStatus/:status', penitipanController.getPenitipanByStatus);
+router.put('/schedule-penitipan-pickup/:id', penitipanController.schedulePenitipanPickup);
+router.patch('/confirm-penitipan-pickup/:id', penitipanController.confirmPenitipanPickup);
+
 
 module.exports = router;
