@@ -483,6 +483,7 @@ exports.getPenitipanByStatus = async (req, res) => {
       'Menunggu diambil',
       'Terjual',
       'Menunggu didonasikan',
+      'Menunggu diambil penitip',
       // Add other valid statuses as needed
     ];
     if (!validStatuses.includes(status)) {
@@ -545,3 +546,147 @@ exports.getPenitipanByStatus = async (req, res) => {
 };
 
 
+exports.schedulePenitipanPickup = async (req, res) => {
+  try {
+    const { id } = req.params; // id_penitipan
+    const { tanggal_mulai, tanggal_berakhir } = req.body;
+
+    if (!id || !tanggal_mulai || !tanggal_berakhir) {
+      return res.status(400).json({ 
+        message: 'id_penitipan, tanggal_mulai, and tanggal_berakhir are required' 
+      });
+    }
+
+    // Validasi hari kerja
+    const startDate = new Date(tanggal_mulai);
+    startDate.setHours(8, 0, 0, 0);
+    const dayOfWeek = startDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return res.status(400).json({ 
+        message: 'Scheduling is only allowed on weekdays (Monday-Friday)' 
+      });
+    }
+
+    // Validasi tidak bisa jadwal hari yang sama setelah jam 4 sore
+    const today = new Date();
+    today.setHours(16, 0, 0, 0);
+    if (startDate.toDateString() === today.toDateString() && new Date().getHours() >= 16) {
+      return res.status(400).json({ 
+        message: 'Cannot schedule pickup on the same day after 4 PM' 
+      });
+    }
+
+    // Cari penitipan berdasarkan id
+    const penitipan = await Penitipan.findByPk(id);
+    if (!penitipan) {
+      return res.status(404).json({ message: 'Penitipan not found' });
+    }
+
+    // Update tanggal_batas_pengambilan dengan tanggal_berakhir + 7 hari
+    const newBatasPengambilan = new Date(tanggal_berakhir);
+    newBatasPengambilan.setDate(newBatasPengambilan.getDate() + 7);
+
+    await penitipan.update({
+      tanggal_batas_pengambilan: newBatasPengambilan
+    });
+
+    res.status(200).json({
+      message: 'Jadwal pengambilan penitipan berhasil diatur',
+      id_penitipan: penitipan.id_penitipan,
+      tanggal_batas_pengambilan: newBatasPengambilan,
+      tanggal_mulai,
+      tanggal_berakhir
+    });
+  } catch (error) {
+    console.error('Error in schedulePenitipanPickup:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+exports.schedulePenitipanPickup = async (req, res) => {
+  try {
+    const { id } = req.params; // id_penitipan
+    const { tanggal_mulai, tanggal_berakhir } = req.body;
+
+    if (!id || !tanggal_mulai || !tanggal_berakhir) {
+      return res.status(400).json({ 
+        message: 'id_penitipan, tanggal_mulai, and tanggal_berakhir are required' 
+      });
+    }
+
+    // Validasi hari kerja
+    const startDate = new Date(tanggal_mulai);
+    startDate.setHours(8, 0, 0, 0);
+    const dayOfWeek = startDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return res.status(400).json({ 
+        message: 'Scheduling is only allowed on weekdays (Monday-Friday)' 
+      });
+    }
+
+    // Validasi tidak bisa jadwal hari yang sama setelah jam 4 sore
+    const today = new Date();
+    today.setHours(16, 0, 0, 0);
+    if (startDate.toDateString() === today.toDateString() && new Date().getHours() >= 16) {
+      return res.status(400).json({ 
+        message: 'Cannot schedule pickup on the same day after 4 PM' 
+      });
+    }
+
+    // Cari penitipan berdasarkan id
+    const penitipan = await Penitipan.findByPk(id);
+    if (!penitipan) {
+      return res.status(404).json({ message: 'Penitipan not found' });
+    }
+
+    // Update tanggal_batas_pengambilan dengan tanggal_berakhir + 7 hari
+    const newBatasPengambilan = new Date(tanggal_berakhir);
+    newBatasPengambilan.setDate(newBatasPengambilan.getDate() + 7);
+
+    await penitipan.update({
+      tanggal_batas_pengambilan: newBatasPengambilan
+    });
+
+    res.status(200).json({
+      message: 'Jadwal pengambilan penitipan berhasil diatur',
+      id_penitipan: penitipan.id_penitipan,
+      tanggal_batas_pengambilan: newBatasPengambilan,
+      tanggal_mulai,
+      tanggal_berakhir
+    });
+  } catch (error) {
+    console.error('Error in schedulePenitipanPickup:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.confirmPenitipanPickup = async (req, res) => {
+  try {
+    const { id } = req.params; // id_penitipan
+
+    if (!id) {
+      return res.status(400).json({ message: 'id_penitipan is required' });
+    }
+
+    // Cari penitipan berdasarkan id
+    const penitipan = await Penitipan.findByPk(id);
+    if (!penitipan) {
+      return res.status(404).json({ message: 'Penitipan not found' });
+    }
+
+    // Update status menjadi "Sudah diambil kembali penitip"
+    await penitipan.update({
+      status_penitipan: 'Sudah diambil kembali penitip'
+    });
+
+    res.status(200).json({
+      message: 'Status penitipan berhasil diupdate',
+      id_penitipan: penitipan.id_penitipan,
+      status_penitipan: 'Sudah diambil kembali penitip'
+    });
+  } catch (error) {
+    console.error('Error in confirmPenitipanPickup:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
