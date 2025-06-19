@@ -458,3 +458,31 @@ exports.checkTopPenitipBadge = async (req, res) => {
     });
   }
 };
+
+exports.addKeuntungan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tambahan_keuntungan } = req.body;
+    
+    const penitip = await Penitip.findByPk(id);
+    if (!penitip) {
+      return res.status(404).json({ message: 'Penitip tidak ditemukan' });
+    }
+    
+    const currentKeuntungan = parseFloat(penitip.keuntungan || 0);
+    const newKeuntungan = currentKeuntungan + parseFloat(tambahan_keuntungan);
+    
+    await penitip.update({ keuntungan: newKeuntungan });
+    
+    res.status(200).json({
+      message: 'Keuntungan berhasil ditambahkan',
+      id_penitip: penitip.id_penitip,
+      keuntungan_sebelum: currentKeuntungan,
+      tambahan_keuntungan: parseFloat(tambahan_keuntungan),
+      keuntungan_setelah: newKeuntungan
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
