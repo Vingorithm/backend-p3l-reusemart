@@ -1,0 +1,57 @@
+const { page = 1, limit = 10 } = req.query;
+const offset = (page - 1) * limit;
+
+OP Operation
+
+// AND
+{ [Op.and]: [{ role: 'pembeli' }, { total_poin: { [Op.gt]: 100 } }] }
+// OR & NOT
+{ [Op.or]: [{ email: { [Op.like]: '%@gmail.com' } }, { role: 'admin' }] }
+{ [Op.not]: { role: 'admin' } }
+
+// Kombinasi
+const whereClause = {
+  [Op.and]: [
+    { total_poin: { [Op.gte]: 50 } },
+    {
+      [Op.or]: [
+        { nama: { [Op.like]: 'K%' } },
+        { email: { [Op.like]: '%@example.com' } }
+      ]
+    },
+    { role: { [Op.ne]: 'banned' } }
+  ]
+};
+
+// Contoh penerapan
+const pembeli = await Pembeli.findAll({
+  where: {
+    total_poin: { [Op.gte]: 100 },
+    nama: { [Op.like]: '%Kevin%' },
+    [Op.or]: [
+      { tanggal_registrasi: { [Op.between]: ['2024-01-01', '2024-06-01'] } },
+      { role: { [Op.in]: ['admin', 'premium'] } }
+    ]
+  },
+  include: [{ model: Akun }]
+});
+
+function cariPembeli({ keyword, minPoin = 0 }) {
+  return Pembeli.findAll({
+    where: {
+      [Op.and]: [
+        { total_poin: { [Op.gte]: minPoin } },
+        {
+          [Op.or]: [
+            { nama: { [Op.like]: `%${keyword}%` } },
+            { '$Akun.email$': { [Op.like]: `%${keyword}%` } }
+          ]
+        }
+      ]
+    },
+    include: [{ model: Akun }]
+  });
+}
+
+
+
