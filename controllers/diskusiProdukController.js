@@ -9,6 +9,7 @@ exports.getAllDiskusiProduk = async (req, res) => {
   try {
     const diskusi = await DiskusiProduk.findAll({
       include: [
+        { model: Barang },
         { model: Pembeli, attributes: ['id_pembeli', 'nama'] },
         { model: Pegawai, attributes: ['id_pegawai', 'nama_pegawai'] }
       ]
