@@ -108,7 +108,7 @@ exports.getAllBarang = async (req, res) => {
       }]
     });
 
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     barang.forEach(b => {
       if (b.gambar) {
         const imageArray = b.gambar.split(',').map(img => img.trim());
@@ -134,12 +134,12 @@ exports.getBarangById = async (req, res) => {
         {
           model: Penitipan
         }
-    ]
+      ]
     });
 
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     if (barang.gambar) {
       const imageArray = barang.gambar.split(',').map(img => img.trim());
       barang.gambar = imageArray.map(img => `${baseUrl}${img}`).join(',');
@@ -190,9 +190,7 @@ exports.getAllBarangMobile = async (req, res) => {
       }]
     });
 
-    const baseUrl = 'http://10.0.2.2:3000/uploads/barang/';
-    
-    // Format setiap data barang untuk memastikan konsistensi
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     const formattedBarang = barang.map(b => formatBarangData(b, baseUrl));
 
     console.log('Data barang yang dikembalikan:', JSON.stringify(formattedBarang, null, 2));
@@ -214,7 +212,7 @@ exports.getBarangByIdMobile = async (req, res) => {
 
     if (!barang) return res.status(404).json({ message: 'Barang tidak ditemukan' });
 
-    const baseUrl = 'http://10.0.2.2:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     const formattedBarang = formatBarangData(barang, baseUrl);
 
     console.log('Data barang by ID yang dikembalikan:', JSON.stringify(formattedBarang, null, 2));
@@ -325,7 +323,7 @@ exports.updateBarang = async (req, res) => {
         oldImageFilenames.forEach((filename) => {
           const actualFilename = filename.includes('/') ? filename.split('/').pop() : filename;
           if (!finalImageFilenames.includes(actualFilename)) {
-            const filePath = path.join(__dirname, '../uploads/barang', actualFilename);
+            const filePath = path.join(__dirname, '../Uploads/barang', actualFilename);
             if (fs.existsSync(filePath)) {
               try {
                 fs.unlinkSync(filePath);
@@ -394,7 +392,7 @@ exports.updateBarang = async (req, res) => {
       ],
     });
 
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     if (updatedBarang.gambar) {
       const imageArray = updatedBarang.gambar.split(',').map((img) => img.trim());
       updatedBarang.gambar = imageArray.map((img) => `${baseUrl}${img}`).join(',');
@@ -445,7 +443,7 @@ exports.getAllBarangGaransi = async (req, res) => {
       }]
     });
 
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}/uploads/barang/`;
     barang.forEach(b => {
       if (b.gambar) {
         const imageArray = b.gambar.split(',').map(img => img.trim());

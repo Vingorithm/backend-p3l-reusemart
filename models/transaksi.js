@@ -11,7 +11,7 @@ const Transaksi = sequelize.define('Transaksi', {
   pendapatan: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0.00 },
   bonus_cepat: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0.00 },
 }, {
-  tableName: 'Transaksi',
+  tableName: 'transaksi',
   timestamps: false,
 });
 

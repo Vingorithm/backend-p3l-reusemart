@@ -58,7 +58,7 @@ const Barang = sequelize.define('Barang', {
     allowNull: false,
   },
 }, {
-  tableName: 'Barang',
+  tableName: 'barang',
   timestamps: false,
 });
 

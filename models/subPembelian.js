@@ -8,7 +8,7 @@ const SubPembelian = sequelize.define('SubPembelian', {
   id_pembelian: { type: DataTypes.STRING(50), allowNull: false },
   id_barang: { type: DataTypes.STRING(50), allowNull: false },
 }, {
-  tableName: 'SubPembelian',
+  tableName: 'subpembelian',
   timestamps: false,
 });
 

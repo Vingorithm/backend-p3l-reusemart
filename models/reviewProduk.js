@@ -8,7 +8,7 @@ const ReviewProduk = sequelize.define('ReviewProduk', {
   rating: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1, max: 5 } },
   tanggal_review: { type: DataTypes.DATE, allowNull: false },
 }, {
-  tableName: 'ReviewProduk',
+  tableName: 'reviewproduk',
   timestamps: false,
 });
 

@@ -14,7 +14,7 @@ const DiskusiProduk = sequelize.define('DiskusiProduk', {
   tanggal_pertanyaan: { type: DataTypes.DATE, allowNull: false },
   tanggal_jawaban: { type: DataTypes.DATE, allowNull: true },
 }, {
-  tableName: 'DiskusiProduk',
+  tableName: 'diskusiproduk',
   timestamps: false,
 });
 

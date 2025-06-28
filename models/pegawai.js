@@ -8,7 +8,7 @@ const Pegawai = sequelize.define('Pegawai', {
   nama_pegawai: { type: DataTypes.STRING(100), allowNull: false },
   tanggal_lahir: { type: DataTypes.DATE, allowNull: false },
 }, {
-  tableName: 'Pegawai',
+  tableName: 'pegawai',
   timestamps: false,
 });
 

@@ -11,6 +11,7 @@ const SubPembelian = require('../models/subPembelian');
 const Pegawai = require('../models/pegawai');
 const cron = require('node-cron');
 const { Op } = require('sequelize');
+const path = require('path');
 
 exports.createPenitipan = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ exports.createPenitipan = async (req, res) => {
 
 exports.getAllPenitipan = async (req, res) => {
   try {
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
     const penitipan = await Penitipan.findAll({
       include: [
         {
@@ -115,6 +116,13 @@ exports.getPenitipanById = async (req, res) => {
       order: [['id_barang', 'ASC']]
     });
     if (!penitipan) return res.status(404).json({ message: 'Penitipan tidak ditemukan' });
+
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
+    if (penitipan.Barang && penitipan.Barang.gambar) {
+      const gambarList = penitipan.Barang.gambar.split(',').map(g => `${baseUrl}${g.trim()}`);
+      penitipan.Barang.gambar = gambarList.join(',');
+    }
+
     res.status(200).json(penitipan);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -124,7 +132,7 @@ exports.getPenitipanById = async (req, res) => {
 exports.getPenitipanByIdBarang = async (req, res) => {
   try {
     const { id_barang } = req.params;
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
 
     const penitipan = await Penitipan.findOne({
       where: { id_barang },
@@ -191,7 +199,7 @@ exports.getPenitipanByIdPenitip = async (req, res) => {
   try {
     const { id } = req.params;
     console.log('Requested ID Penitip:', id);
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
     
     const penitipan = await Penitipan.findAll({
       where: {
@@ -244,7 +252,7 @@ exports.getItemForScheduling = async (req, res) => {
       return res.status(400).json({ message: 'id_penitipan is required' });
     }
 
-    const baseUrl = 'http://localhost:3000/uploads/barang/';
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
 
     const penitipan = await Penitipan.findOne({
       where: {
@@ -442,7 +450,7 @@ exports.checkPenitipanHabis = async () => {
         console.log(`Penitipan dengan ID ${penitipan.id_penitipan} updated to 'Menunggu didonasikan'`);
         updatedCount++;
         updatedIds.push(penitipan.id_penitipan);
-      }else if(now > batasAkhir && now < batasPengambilan){
+      } else if (now > batasAkhir && now < batasPengambilan) {
         await penitipan.update({ status_penitipan: 'Menunggu untuk diambil' });
         console.log(`Penitipan dengan ID ${penitipan.id_penitipan} updated to 'Menunggu untuk diambil'`);
         updatedCount++;
@@ -468,7 +476,7 @@ exports.manualCheckPenitipanHabis = async (req, res) => {
   }
 };
 
-// Buat ngecek tiap tengah malem
+// Buat ngecek tiap tengah malam
 cron.schedule('0 0 * * *', () => {
   console.log('Running check penitipan habis job...');
   exports.checkPenitipanHabis();
@@ -489,6 +497,8 @@ exports.getPenitipanByStatus = async (req, res) => {
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status_penitipan value' });
     }
+
+    const baseUrl = `${process.env.BASE_URL}${path.join('/uploads/barang/')}`;
 
     const penitipanRecords = await Penitipan.findAll({
       where: { status_penitipan: status },
@@ -538,71 +548,21 @@ exports.getPenitipanByStatus = async (req, res) => {
       return res.status(404).json({ message: `No penitipan found with status ${status}` });
     }
 
-    res.status(200).json(penitipanRecords);
+    const penitipanWithFullImageUrl = penitipanRecords.map(p => {
+      const barang = p.Barang;
+      if (barang && barang.gambar) {
+        const gambarList = barang.gambar.split(',').map(g => `${baseUrl}${g.trim()}`);
+        barang.gambar = gambarList.join(',');
+      }
+      return p;
+    });
+
+    res.status(200).json(penitipanWithFullImageUrl);
   } catch (error) {
     console.error('Error fetching penitipan by status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
-exports.schedulePenitipanPickup = async (req, res) => {
-  try {
-    const { id } = req.params; // id_penitipan
-    const { tanggal_mulai, tanggal_berakhir } = req.body;
-
-    if (!id || !tanggal_mulai || !tanggal_berakhir) {
-      return res.status(400).json({ 
-        message: 'id_penitipan, tanggal_mulai, and tanggal_berakhir are required' 
-      });
-    }
-
-    // Validasi hari kerja
-    const startDate = new Date(tanggal_mulai);
-    startDate.setHours(8, 0, 0, 0);
-    const dayOfWeek = startDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      return res.status(400).json({ 
-        message: 'Scheduling is only allowed on weekdays (Monday-Friday)' 
-      });
-    }
-
-    // Validasi tidak bisa jadwal hari yang sama setelah jam 4 sore
-    const today = new Date();
-    today.setHours(16, 0, 0, 0);
-    if (startDate.toDateString() === today.toDateString() && new Date().getHours() >= 16) {
-      return res.status(400).json({ 
-        message: 'Cannot schedule pickup on the same day after 4 PM' 
-      });
-    }
-
-    // Cari penitipan berdasarkan id
-    const penitipan = await Penitipan.findByPk(id);
-    if (!penitipan) {
-      return res.status(404).json({ message: 'Penitipan not found' });
-    }
-
-    // Update tanggal_batas_pengambilan dengan tanggal_berakhir + 7 hari
-    const newBatasPengambilan = new Date(tanggal_berakhir);
-    newBatasPengambilan.setDate(newBatasPengambilan.getDate() + 7);
-
-    await penitipan.update({
-      tanggal_batas_pengambilan: newBatasPengambilan
-    });
-
-    res.status(200).json({
-      message: 'Jadwal pengambilan penitipan berhasil diatur',
-      id_penitipan: penitipan.id_penitipan,
-      tanggal_batas_pengambilan: newBatasPengambilan,
-      tanggal_mulai,
-      tanggal_berakhir
-    });
-  } catch (error) {
-    console.error('Error in schedulePenitipanPickup:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
 
 exports.schedulePenitipanPickup = async (req, res) => {
   try {

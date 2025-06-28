@@ -11,7 +11,7 @@ const Penitipan = sequelize.define('Penitipan', {
   perpanjangan: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: 0 },
   status_penitipan: { type: DataTypes.STRING(255), allowNull: false },
 }, {
-  tableName: 'Penitipan',
+  tableName: 'penitipan',
   timestamps: false,
 });
 

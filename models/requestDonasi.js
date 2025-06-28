@@ -9,7 +9,7 @@ const RequestDonasi = sequelize.define('RequestDonasi', {
   tanggal_request: { type: DataTypes.DATE, allowNull: false },
   status_request: { type: DataTypes.STRING(255), allowNull: false },
 }, {
-  tableName: 'RequestDonasi',
+  tableName: 'requestdonasi',
   timestamps: false,
 });
 

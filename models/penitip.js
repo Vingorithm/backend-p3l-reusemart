@@ -14,7 +14,7 @@ const Penitip = sequelize.define('Penitip', {
   total_poin: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   tanggal_registrasi: { type: DataTypes.DATE, allowNull: false },
 }, {
-  tableName: 'Penitip',
+  tableName: 'penitip',
   timestamps: false,
 });
 

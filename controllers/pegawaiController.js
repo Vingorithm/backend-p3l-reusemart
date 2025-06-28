@@ -102,8 +102,7 @@ exports.getAllPegawai = async (req, res) => {
       order: [['id_pegawai', 'ASC']]
     });
 
-    // Add base URL to profile pictures
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const baseUrl = `${process.env.BASE_URL}`;
     pegawai.forEach(p => {
       if (p.Akun && p.Akun.profile_picture) {
         if (!p.Akun.profile_picture.startsWith('http')) {

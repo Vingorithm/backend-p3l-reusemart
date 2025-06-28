@@ -28,7 +28,7 @@ const Akun = sequelize.define('Akun', {
     allowNull: true,
   },
 }, {
-  tableName: 'Akun',
+  tableName: 'akun',
   timestamps: false,
 });
 

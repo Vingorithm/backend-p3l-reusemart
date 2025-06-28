@@ -11,7 +11,7 @@ const Merchandise = sequelize.define('Merchandise', {
   gambar: { type: DataTypes.STRING(255), allowNull: false },
   stok_merchandise: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 0 } },
 }, {
-  tableName: 'Merchandise',
+  tableName: 'merchandise',
   timestamps: false,
 });
 

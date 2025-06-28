@@ -164,8 +164,7 @@ exports.getAllPenitip = async (req, res) => {
       order: [['id_penitip', 'ASC']]
     });
 
-    const baseUrl = 'http://localhost:3000/uploads/profile_picture/';
-
+    const baseUrl = `${process.env.BASE_URL}/uploads/profile_picture/`;
     penitip.forEach(p => {
       if (p.Akun && p.Akun.profile_picture) {
         p.Akun.profile_picture = `${baseUrl}${p.Akun.profile_picture}`;

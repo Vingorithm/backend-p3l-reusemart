@@ -12,7 +12,7 @@ const Pengiriman = sequelize.define('Pengiriman', {
   status_pengiriman: { type: DataTypes.STRING(255), allowNull: false },
   jenis_pengiriman: { type: DataTypes.STRING(255), allowNull: false },
 }, {
-  tableName: 'Pengiriman',
+  tableName: 'pengiriman',
   timestamps: false,
 });
 

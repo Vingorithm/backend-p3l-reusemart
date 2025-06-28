@@ -8,7 +8,7 @@ const AlamatPembeli = sequelize.define('AlamatPembeli', {
   alamat_lengkap: { type: DataTypes.STRING(500), allowNull: false },
   is_main_address: { type: DataTypes.BOOLEAN, allowNull: false },
 }, {
-  tableName: 'AlamatPembeli',
+  tableName: 'alamatpembeli',
   timestamps: false,
 });
 

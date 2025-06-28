@@ -26,7 +26,7 @@ const Pembeli = sequelize.define('Pembeli', {
     allowNull: false,
   },
 }, {
-  tableName: 'Pembeli',
+  tableName: 'pembeli',
   timestamps: false,
 });
 

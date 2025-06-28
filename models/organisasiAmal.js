@@ -9,7 +9,7 @@ const OrganisasiAmal = sequelize.define('OrganisasiAmal', {
   alamat: { type: DataTypes.STRING(500), allowNull: false },
   tanggal_registrasi: { type: DataTypes.DATE, allowNull: false },
 }, {
-  tableName: 'OrganisasiAmal',
+  tableName: 'organisasiamal',
   timestamps: false,
 });
 

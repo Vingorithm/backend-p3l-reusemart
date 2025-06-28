@@ -8,7 +8,7 @@ const BonusTopSeller = sequelize.define('BonusTopSeller', {
   nominal: { type: DataTypes.DECIMAL(15, 2), allowNull: false, defaultValue: 0.00 },
   tanggal_pembayaran: { type: DataTypes.DATE, allowNull: false },
 }, {
-  tableName: 'BonusTopSeller',
+  tableName: 'bonustopseller',
   timestamps: false,
 });
 

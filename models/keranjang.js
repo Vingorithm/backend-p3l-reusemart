@@ -8,7 +8,7 @@ const Keranjang = sequelize.define('Keranjang', {
   id_barang: { type: DataTypes.STRING(50), allowNull: false },
   id_pembeli: { type: DataTypes.STRING(50), allowNull: false },
 }, {
-  tableName: 'Keranjang',
+  tableName: 'keranjang',
   timestamps: false,
   indexes: [{ unique: true, fields: ['id_barang', 'id_pembeli'] }],
 });

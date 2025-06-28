@@ -19,7 +19,7 @@ const Pembelian = sequelize.define('Pembelian', {
   poin_diperoleh: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
   status_pembelian: { type: DataTypes.STRING(255), allowNull: false },
 }, {
-  tableName: 'Pembelian',
+  tableName: 'pembelian',
   timestamps: false,
 });
 

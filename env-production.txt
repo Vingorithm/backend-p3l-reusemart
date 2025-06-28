@@ -1,0 +1,9 @@
+DB_HOST=127.0.0.1
+DB_USER=reusema5_kevin
+DB_PASSWORD=mp8DaE_3pbEVp[7E
+DB_NAME=reusema5_p3l
+PORT=3000
+EMAIL_USER=ivantjandra20@gmail.com
+EMAIL_PASSWORD=mpeselywvuqharuw
+JWT_SECRET=
+BASE_URL=https://api.reusemart88.my.id/api

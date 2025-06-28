@@ -12,7 +12,7 @@ const DonasiBarang = sequelize.define('DonasiBarang', {
   tanggal_donasi: { type: DataTypes.DATE, allowNull: false },
   nama_penerima: { type: DataTypes.STRING(255), allowNull: false }
 }, {
-  tableName: 'DonasiBarang',
+  tableName: 'donasibarang',
   timestamps: false,
 });
 

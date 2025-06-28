@@ -13,7 +13,7 @@ const ClaimMerchandise = sequelize.define('ClaimMerchandise', {
   tanggal_ambil: { type: DataTypes.DATE, allowNull: true },
   status_claim_merchandise: { type: DataTypes.STRING(255), allowNull: false },
 }, {
-  tableName: 'ClaimMerchandise',
+  tableName: 'claimmerchandise',
   timestamps: false,
 });
 
