@@ -43,13 +43,29 @@ const startScheduledTasks = () => {
 };
 
 // Tanpa Sync Database
+// app.listen(PORT, async () => {
+//   try {
+//     await sequelize.authenticate();
+//     console.log('Database connected');
+//     startScheduledTasks();
+//     console.log(`Server berjalan di port ${PORT}`);
+//   } catch (error) {
+//     console.error('Unable to connect to the database:', error);
+//   }
+// });
+
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected');
+
+    await sequelize.sync({ alter: true }); // <= Auto migrate tabel
+    console.log('Database synchronized');
+
     startScheduledTasks();
     console.log(`Server berjalan di port ${PORT}`);
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 });
+
